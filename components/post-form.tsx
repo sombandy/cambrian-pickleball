@@ -11,7 +11,7 @@ import {
   useTransition,
 } from "react";
 
-import { CATEGORIES } from "@/lib/constants";
+import { CATEGORIES, TOURNAMENT_FEEDBACK_PATH } from "@/lib/constants";
 import {
   clearPostDraft,
   readPostDraft,
@@ -22,7 +22,6 @@ import {
   cn,
   getCategoryLabel,
   getDisplayName,
-  getInitials,
   htmlToPlainText,
   plainTextToHtml,
 } from "@/lib/utils";
@@ -57,7 +56,6 @@ export function PostForm({
   const signedInName = getDisplayName(user);
   const needsAnonymousFlow = mode === "create" && !isSignedIn;
   const isCreateMode = mode === "create";
-  const composerIdentity = isSignedIn ? signedInName : "Community";
 
   function validatePost(values: { title: string; body: string }) {
     if (values.title.trim().length < 10) {
@@ -145,7 +143,7 @@ export function PostForm({
         ? `/posts/${payload.post.id}`
         : postId
           ? `/posts/${postId}`
-          : "/";
+          : TOURNAMENT_FEEDBACK_PATH;
 
       router.push(destination);
       router.refresh();
@@ -199,24 +197,6 @@ export function PostForm({
         isCreateMode ? "p-4 md:p-5" : "p-5 md:p-6",
       )}
     >
-      {isCreateMode ? (
-        <div className="mb-4 flex items-center gap-3">
-          <div className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#edf3ff_0%,#dfeaff_100%)] text-sm font-semibold text-court shadow-[inset_0_1px_0_rgba(255,255,255,0.86)]">
-            {getInitials(composerIdentity)}
-          </div>
-          <div className="min-w-0">
-            <p className="font-display text-[1.12rem] font-semibold tracking-tight text-ink">
-              Share with the community
-            </p>
-            <p className="text-sm text-muted">
-              {isSignedIn
-                ? `Posting as ${signedInName}`
-                : "Start a post in a few lines. Sign in to keep it editable."}
-            </p>
-          </div>
-        </div>
-      ) : null}
-
       <div className="rounded-[24px] border border-outline/85 bg-white/84 px-4 py-3.5 shadow-[0_18px_34px_-34px_rgba(53,109,255,0.34),inset_0_1px_0_rgba(255,255,255,0.92)] md:px-4.5">
         <label className="block">
           <span

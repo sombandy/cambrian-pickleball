@@ -25,12 +25,12 @@ export async function generateMetadata({
 
   if (!post) {
     return {
-      title: "Post not found | Cambrian Pickleball Feedback Board",
+      title: "Post not found",
     };
   }
 
   return {
-    title: `${post.title} | Cambrian Pickleball Feedback Board`,
+    title: post.title,
     description: excerpt(stripHtml(post.body), 160),
   };
 }
