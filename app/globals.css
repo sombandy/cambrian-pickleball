@@ -1,19 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f3f7fd;
-  --surface: rgba(255, 255, 255, 0.88);
+  --background: #f6f8ef;
+  --surface: rgba(255, 255, 250, 0.9);
   --surface-strong: #ffffff;
-  --ink: #152033;
-  --muted: #67768b;
-  --outline: #d8e2f0;
-  --outline-strong: #b8c7de;
-  --court: #356dff;
-  --court-soft: #e9f0ff;
-  --sun: #f3f7ff;
-  --clay: #d96b4f;
-  --berry: #244cc9;
-  --shadow: rgba(30, 41, 59, 0.08);
+  --ink: #1b2415;
+  --muted: #66715a;
+  --outline: #dbe3ca;
+  --outline-strong: #c5d39f;
+  --court: #8ca92b;
+  --court-soft: #eef5d9;
+  --sun: #fafbea;
+  --clay: #cb7246;
+  --berry: #5d7320;
+  --shadow: rgba(42, 49, 31, 0.08);
 }
 
 @theme inline {
@@ -43,10 +43,10 @@ html {
 
 body {
   background:
-    radial-gradient(circle at top left, rgba(53, 109, 255, 0.13), transparent 28%),
-    radial-gradient(circle at top right, rgba(36, 76, 201, 0.1), transparent 26%),
-    radial-gradient(circle at bottom left, rgba(13, 148, 136, 0.08), transparent 24%),
-    linear-gradient(180deg, #f8fbff 0%, #f3f6fb 100%);
+    radial-gradient(circle at top left, rgba(140, 169, 43, 0.16), transparent 30%),
+    radial-gradient(circle at top right, rgba(93, 115, 32, 0.11), transparent 28%),
+    radial-gradient(circle at bottom left, rgba(184, 198, 93, 0.11), transparent 25%),
+    linear-gradient(180deg, #fbfcf3 0%, #f3f6e8 100%);
   color: var(--ink);
   font-family: var(--font-body-source), sans-serif;
   min-height: 100vh;
@@ -65,28 +65,28 @@ textarea {
 }
 
 ::selection {
-  background: rgba(47, 106, 86, 0.18);
+  background: rgba(93, 115, 32, 0.18);
   color: var(--ink);
 }
 
 .surface-card {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.9) 100%);
-  border: 1px solid rgba(216, 226, 240, 0.92);
+    linear-gradient(180deg, rgba(255, 255, 252, 0.96) 0%, rgba(253, 255, 248, 0.9) 100%);
+  border: 1px solid rgba(219, 227, 202, 0.92);
   box-shadow:
-    0 28px 50px -38px rgba(30, 41, 59, 0.26),
-    0 8px 18px -16px rgba(53, 109, 255, 0.16),
+    0 28px 50px -38px rgba(30, 38, 19, 0.22),
+    0 8px 18px -16px rgba(140, 169, 43, 0.16),
     inset 0 1px 0 rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(16px);
 }
 
 .primary-button {
-  background: linear-gradient(135deg, #4d82ff 0%, #356dff 52%, #2458dd 100%);
+  background: linear-gradient(135deg, #a8c53a 0%, #8ca92b 52%, #6d871c 100%);
   color: white;
-  border: 1px solid #2957d5;
+  border: 1px solid #6a8217;
   box-shadow:
-    0 20px 28px -18px rgba(53, 109, 255, 0.65),
-    0 6px 14px -10px rgba(36, 76, 201, 0.45),
+    0 20px 28px -18px rgba(140, 169, 43, 0.55),
+    0 6px 14px -10px rgba(93, 115, 32, 0.38),
     inset 0 1px 0 rgba(255, 255, 255, 0.22);
   transition:
     transform 160ms ease,
@@ -96,21 +96,21 @@ textarea {
 }
 
 .primary-button:hover {
-  background: linear-gradient(135deg, #4579ff 0%, #2f67fb 52%, #214ecd 100%);
+  background: linear-gradient(135deg, #9fbc35 0%, #84a223 52%, #627917 100%);
   box-shadow:
-    0 24px 34px -20px rgba(53, 109, 255, 0.74),
-    0 8px 16px -12px rgba(36, 76, 201, 0.5),
+    0 24px 34px -20px rgba(140, 169, 43, 0.62),
+    0 8px 16px -12px rgba(93, 115, 32, 0.44),
     inset 0 1px 0 rgba(255, 255, 255, 0.24);
   transform: translateY(-1px);
 }
 
 .secondary-button {
-  background: linear-gradient(180deg, #f7faff 0%, #eff4ff 100%);
-  color: #2852c7;
-  border: 1px solid #d8e4ff;
+  background: linear-gradient(180deg, #fbfcea 0%, #f3f7df 100%);
+  color: #61791b;
+  border: 1px solid #dbe6b8;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    0 10px 20px -20px rgba(53, 109, 255, 0.35);
+    0 10px 20px -20px rgba(140, 169, 43, 0.3);
   transition:
     transform 160ms ease,
     box-shadow 160ms ease,
@@ -118,7 +118,7 @@ textarea {
 }
 
 .secondary-button:hover {
-  background: linear-gradient(180deg, #f0f5ff 0%, #e6eeff 100%);
+  background: linear-gradient(180deg, #f6f9e4 0%, #edf2d4 100%);
   transform: translateY(-1px);
 }
 
@@ -145,10 +145,10 @@ textarea {
 .modern-input {
   border: 1px solid transparent;
   border-radius: 18px;
-  background: linear-gradient(180deg, rgba(249, 251, 255, 0.94) 0%, rgba(244, 248, 255, 0.94) 100%);
+  background: linear-gradient(180deg, rgba(251, 252, 241, 0.94) 0%, rgba(246, 249, 232, 0.94) 100%);
   box-shadow:
-    inset 0 0 0 1px rgba(216, 226, 240, 0.95),
-    0 10px 20px -22px rgba(53, 109, 255, 0.3);
+    inset 0 0 0 1px rgba(219, 227, 202, 0.95),
+    0 10px 20px -22px rgba(140, 169, 43, 0.24);
   transition:
     border-color 160ms ease,
     box-shadow 160ms ease,
@@ -158,9 +158,9 @@ textarea {
 .modern-input:focus {
   background: white;
   box-shadow:
-    inset 0 0 0 1px rgba(53, 109, 255, 0.44),
-    0 0 0 4px rgba(53, 109, 255, 0.11),
-    0 14px 26px -24px rgba(53, 109, 255, 0.36);
+    inset 0 0 0 1px rgba(140, 169, 43, 0.45),
+    0 0 0 4px rgba(140, 169, 43, 0.12),
+    0 14px 26px -24px rgba(140, 169, 43, 0.32);
   outline: none;
 }
 

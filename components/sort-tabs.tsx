@@ -38,7 +38,7 @@ export function SortTabs({
             className={cn(
               "rounded-2xl px-4 py-2 text-sm font-semibold transition",
               active
-                ? "primary-button shadow-[0_14px_24px_-18px_rgba(53,109,255,0.6)]"
+                ? "primary-button shadow-[0_14px_24px_-18px_rgba(140,169,43,0.52)]"
                 : "soft-button border-transparent bg-transparent text-muted shadow-none hover:border-white/80 hover:bg-white/88 hover:text-ink",
             )}
           >

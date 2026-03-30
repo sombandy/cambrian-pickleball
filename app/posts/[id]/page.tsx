@@ -56,7 +56,7 @@ export default async function PostDetailPage({
         <article className="surface-card rounded-[30px] p-5 md:p-7">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="flex items-start gap-3">
-              <div className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#edf3ff_0%,#dfeaff_100%)] text-sm font-semibold text-court shadow-[inset_0_1px_0_rgba(255,255,255,0.85)]">
+              <div className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#f4f8e3_0%,#e8f0cb_100%)] text-sm font-semibold text-court shadow-[inset_0_1px_0_rgba(255,255,255,0.85)]">
                 {getInitials(post.authorName)}
               </div>
               <div>
@@ -115,7 +115,7 @@ export default async function PostDetailPage({
             post.comments.map((comment) => (
               <article key={comment.id} className="surface-card rounded-[24px] p-4 md:p-5">
                 <div className="flex items-start gap-3">
-                  <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#f4f7ff_0%,#e6eeff_100%)] text-sm font-semibold text-court">
+                  <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#f8faea_0%,#edf4d6_100%)] text-sm font-semibold text-court">
                     {getInitials(comment.authorName)}
                   </div>
                   <div className="min-w-0 flex-1">
