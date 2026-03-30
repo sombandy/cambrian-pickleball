@@ -1,63 +1,34 @@
-import { PaginationControls } from "@/components/pagination-controls";
-import { PostCard } from "@/components/post-card";
-import { PostForm } from "@/components/post-form";
-import { SortTabs } from "@/components/sort-tabs";
-import { PAGE_SIZE } from "@/lib/constants";
-import { getViewerAuth } from "@/lib/auth";
-import { listPosts } from "@/lib/data";
-import { paginationSchema, sortSchema } from "@/lib/validators";
+const focusAreas = ["Community play", "Tournament updates", "More details soon"];
 
-function getSingleValue(value: string | string[] | undefined) {
-  return Array.isArray(value) ? value[0] : value;
-}
-
-export default async function Home({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const resolvedSearchParams = await searchParams;
-  const rawSort = getSingleValue(resolvedSearchParams.sort);
-  const rawPage = getSingleValue(resolvedSearchParams.page);
-  const rawLimit = getSingleValue(resolvedSearchParams.limit);
-
-  const sort = sortSchema.safeParse(rawSort).data ?? "newest";
-  const pagination = paginationSchema.safeParse({
-    page: rawPage,
-    limit: rawLimit ?? PAGE_SIZE.toString(),
-  }).data ?? { page: 1, limit: PAGE_SIZE };
-
-  const viewer = await getViewerAuth();
-  const { posts, totalCount } = await listPosts({
-    sort,
-    page: pagination.page,
-    limit: pagination.limit,
-    viewerUserId: viewer.userId,
-  });
-
+export default function HomePage() {
   return (
-    <main className="grid gap-6 pb-12">
-      <PostForm />
+    <main className="flex flex-1 items-center pb-12 pt-3">
+      <section className="surface-card relative isolate w-full overflow-hidden rounded-[36px] px-6 py-10 sm:px-10 sm:py-14">
+        <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-1/2 bg-[radial-gradient(circle_at_top_right,rgba(53,109,255,0.2),transparent_52%),radial-gradient(circle_at_bottom_right,rgba(13,148,136,0.12),transparent_44%)] md:block" />
 
-      <section className="grid gap-4">
-        <div className="flex items-center justify-between gap-3">
-          <h1 className="text-sm font-medium tracking-wide text-muted">Posts</h1>
-          <SortTabs sort={sort} limit={pagination.limit} />
-        </div>
+        <div className="relative max-w-3xl">
+          <span className="inline-flex rounded-full border border-court/15 bg-court-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-court">
+            Welcome
+          </span>
+          <h1 className="mt-5 font-display text-4xl font-semibold tracking-tight text-ink sm:text-5xl md:text-6xl">
+            Cambrian Community Pickleball is getting its new home.
+          </h1>
+          <p className="mt-5 max-w-2xl text-lg leading-8 text-muted sm:text-[1.2rem]">
+            We&apos;re building a simple place for local play, tournament updates, and
+            community news. Full details will be here soon.
+          </p>
 
-        {posts.length === 0 ? (
-          <div className="surface-card rounded-[24px] p-6 text-sm text-muted">
-            No posts yet.
-          </div>
-        ) : (
-          <div className="grid gap-4">
-            {posts.map((post) => (
-              <PostCard key={post.id} post={post} />
+          <div className="mt-8 flex flex-wrap gap-3">
+            {focusAreas.map((item) => (
+              <span
+                key={item}
+                className="rounded-full border border-white/80 bg-white/82 px-4 py-2 text-sm font-medium text-ink shadow-[0_16px_24px_-22px_rgba(30,41,59,0.36)]"
+              >
+                {item}
+              </span>
             ))}
           </div>
-        )}
-
-        <PaginationControls page={pagination.page} totalCount={totalCount} limit={pagination.limit} sort={sort} />
+        </div>
       </section>
     </main>
   );

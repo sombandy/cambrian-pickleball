@@ -2,12 +2,12 @@ import Link from "next/link";
 
 import type { SortOption } from "@/lib/types";
 
-function buildQuery(sort: SortOption, page: number, limit: number) {
+function buildQuery(basePath: string, sort: SortOption, page: number, limit: number) {
   const params = new URLSearchParams();
   params.set("sort", sort);
   params.set("page", page.toString());
   params.set("limit", limit.toString());
-  return `/?${params.toString()}`;
+  return `${basePath}?${params.toString()}`;
 }
 
 export function PaginationControls({
@@ -15,11 +15,13 @@ export function PaginationControls({
   totalCount,
   limit,
   sort,
+  basePath = "/",
 }: {
   page: number;
   totalCount: number;
   limit: number;
   sort: SortOption;
+  basePath?: string;
 }) {
   const totalPages = Math.max(1, Math.ceil(totalCount / limit));
 
@@ -34,7 +36,7 @@ export function PaginationControls({
       </p>
       <div className="flex items-center gap-2">
         <Link
-          href={buildQuery(sort, Math.max(1, page - 1), limit)}
+          href={buildQuery(basePath, sort, Math.max(1, page - 1), limit)}
           aria-disabled={page <= 1}
           className={`rounded-2xl px-3.5 py-2.5 text-sm font-medium transition ${
             page <= 1
@@ -45,7 +47,7 @@ export function PaginationControls({
           Previous
         </Link>
         <Link
-          href={buildQuery(sort, Math.min(totalPages, page + 1), limit)}
+          href={buildQuery(basePath, sort, Math.min(totalPages, page + 1), limit)}
           aria-disabled={page >= totalPages}
           className={`rounded-2xl px-3.5 py-2.5 text-sm font-medium transition ${
             page >= totalPages

@@ -8,15 +8,23 @@ const SIMPLE_SORTS: Array<{ value: SortOption; label: string }> = [
   { value: "upvoted", label: "Top" },
 ];
 
-function buildQuery(sort: SortOption, limit: number) {
+function buildQuery(basePath: string, sort: SortOption, limit: number) {
   const params = new URLSearchParams();
   params.set("sort", sort);
   params.set("page", "1");
   params.set("limit", limit.toString());
-  return `/?${params.toString()}`;
+  return `${basePath}?${params.toString()}`;
 }
 
-export function SortTabs({ sort, limit }: { sort: SortOption; limit: number }) {
+export function SortTabs({
+  sort,
+  limit,
+  basePath = "/",
+}: {
+  sort: SortOption;
+  limit: number;
+  basePath?: string;
+}) {
   return (
     <div className="inline-flex rounded-[22px] border border-white/80 bg-white/82 p-1.5 shadow-[0_20px_34px_-30px_rgba(30,41,59,0.32)] backdrop-blur-xl">
       {SIMPLE_SORTS.map((option) => {
@@ -25,7 +33,7 @@ export function SortTabs({ sort, limit }: { sort: SortOption; limit: number }) {
         return (
           <Link
             key={option.value}
-            href={buildQuery(option.value, limit)}
+            href={buildQuery(basePath, option.value, limit)}
             aria-current={active ? "page" : undefined}
             className={cn(
               "rounded-2xl px-4 py-2 text-sm font-semibold transition",
