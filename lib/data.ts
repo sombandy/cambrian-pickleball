@@ -377,6 +377,37 @@ export async function createComment(input: {
   return comment ?? null;
 }
 
+export async function getEditableComment(commentId: string) {
+  const sql = db();
+
+  const [comment] = await sql<{
+    id: string;
+    post_id: string;
+    body: string;
+    clerk_id: string | null;
+  }[]>`
+    SELECT id, post_id, body, clerk_id
+    FROM comments
+    WHERE id = ${commentId}
+    LIMIT 1
+  `;
+
+  return comment ?? null;
+}
+
+export async function updateComment(commentId: string, input: { body: string }) {
+  const sql = db();
+
+  const [comment] = await sql<{ id: string }[]>`
+    UPDATE comments
+    SET body = ${input.body}
+    WHERE id = ${commentId}
+    RETURNING id
+  `;
+
+  return comment ?? null;
+}
+
 export async function deleteComment(commentId: string) {
   const sql = db();
 

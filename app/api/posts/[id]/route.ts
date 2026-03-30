@@ -41,7 +41,7 @@ export async function PATCH(
       return jsonError("Post not found.", 404);
     }
 
-    const canEdit = viewer.isAdmin || existingPost.clerk_id === viewer.userId;
+    const canEdit = existingPost.clerk_id === viewer.userId;
     if (!canEdit) {
       return jsonError("You do not have permission to edit this post.", 403);
     }

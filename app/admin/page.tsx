@@ -25,7 +25,7 @@ export default async function AdminPage() {
           Keep the board readable, fair, and useful.
         </h1>
         <p className="mt-4 max-w-3xl text-base leading-7 text-muted">
-          Admins can edit any post, delete bad content, and manage the small moderation team directly through Clerk metadata.
+          Admins can delete bad content and manage the small moderation team directly through Clerk metadata.
         </p>
       </section>
 
