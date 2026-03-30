@@ -225,9 +225,9 @@ export function CommentForm({ postId }: { postId: string }) {
             <div className="flex items-start gap-2">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
               <div>
-                <p>This comment will be published as Anonymous.</p>
+                <p>This comment will be published as Anonymous and cannot be edited or deleted later.</p>
                 <p className="mt-1 text-orange-700/80">
-                  Sign in if you want your comment attached to your account instead.
+                  Sign in so you can edit or delete it later.
                 </p>
               </div>
             </div>

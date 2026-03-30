@@ -24,7 +24,7 @@ export default async function EditPostPage({
     notFound();
   }
 
-  const canEdit = viewer.isAdmin || post.clerk_id === viewer.userId;
+  const canEdit = post.clerk_id === viewer.userId;
 
   if (!canEdit) {
     redirect(`/posts/${id}`);

@@ -3,6 +3,7 @@ import { ArrowLeft, MessageSquareText } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { CommentCard } from "@/components/comment-card";
 import { CommentForm } from "@/components/comment-form";
 import { PostOwnerActions } from "@/components/post-owner-actions";
 import { UpvoteToggle } from "@/components/upvote-toggle";
@@ -50,9 +51,8 @@ export default async function PostDetailPage({
     notFound();
   }
 
-  const canManagePost = Boolean(
-    viewer.userId && (viewer.isAdmin || post.clerkId === viewer.userId),
-  );
+  const canEditPost = Boolean(viewer.userId && post.clerkId === viewer.userId);
+  const canDeletePost = Boolean(viewer.userId && (viewer.isAdmin || post.clerkId === viewer.userId));
 
   return (
     <main className="grid gap-5 pb-12">
@@ -81,8 +81,13 @@ export default async function PostDetailPage({
                 <p className="mt-1 text-sm text-muted">{post.authorName}</p>
               </div>
             </div>
-            {canManagePost ? (
-              <PostOwnerActions postId={post.id} editHref={`/posts/${post.id}/edit`} />
+            {canEditPost || canDeletePost ? (
+              <PostOwnerActions
+                postId={post.id}
+                editHref={`/posts/${post.id}/edit`}
+                canEdit={canEditPost}
+                canDelete={canDeletePost}
+              />
             ) : null}
           </div>
 
@@ -119,19 +124,12 @@ export default async function PostDetailPage({
             </div>
           ) : (
             post.comments.map((comment) => (
-              <article key={comment.id} className="surface-card rounded-[24px] p-4 md:p-5">
-                <div className="flex items-start gap-3">
-                  <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#f8faea_0%,#edf4d6_100%)] text-sm font-semibold text-court">
-                    {getInitials(comment.authorName)}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm text-muted">
-                      {comment.authorName} · {formatRelativeTime(comment.createdAt)}
-                    </p>
-                    <p className="mt-3 text-[1.02rem] leading-7 text-ink">{comment.body}</p>
-                  </div>
-                </div>
-              </article>
+              <CommentCard
+                key={`${comment.id}:${comment.body}`}
+                comment={comment}
+                canEdit={Boolean(viewer.userId && comment.clerkId === viewer.userId)}
+                canDelete={Boolean(viewer.userId && (viewer.isAdmin || comment.clerkId === viewer.userId))}
+              />
             ))
           )}
         </section>
