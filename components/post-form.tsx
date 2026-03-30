@@ -374,9 +374,9 @@ export function PostForm({
             <div className="flex items-start gap-2">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
               <div>
-                <p>Anonymous posts cannot be edited later.</p>
+                <p>Anonymous posts cannot be edited or deleted later.</p>
                 <p className="mt-1 text-orange-700/80">
-                  Sign in to publish under your account if you want to edit this post later.
+                  Sign in to publish under your account if you want to edit or delete this post later.
                 </p>
               </div>
             </div>

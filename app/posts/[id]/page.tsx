@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import { ArrowLeft, MessageSquareText, PencilLine } from "lucide-react";
+import { ArrowLeft, MessageSquareText } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { CommentForm } from "@/components/comment-form";
+import { PostOwnerActions } from "@/components/post-owner-actions";
 import { UpvoteToggle } from "@/components/upvote-toggle";
 import { getViewerAuth } from "@/lib/auth";
 import { TOURNAMENT_FEEDBACK_PATH } from "@/lib/constants";
@@ -49,7 +50,9 @@ export default async function PostDetailPage({
     notFound();
   }
 
-  const canEdit = Boolean(viewer.userId && (viewer.isAdmin || post.clerkId === viewer.userId));
+  const canManagePost = Boolean(
+    viewer.userId && (viewer.isAdmin || post.clerkId === viewer.userId),
+  );
 
   return (
     <main className="grid gap-5 pb-12">
@@ -78,14 +81,8 @@ export default async function PostDetailPage({
                 <p className="mt-1 text-sm text-muted">{post.authorName}</p>
               </div>
             </div>
-            {canEdit ? (
-              <Link
-                href={`/posts/${post.id}/edit`}
-                className="soft-button inline-flex items-center gap-2 rounded-2xl px-3.5 py-2.5 text-sm font-medium"
-              >
-                <PencilLine className="h-4 w-4" />
-                Edit
-              </Link>
+            {canManagePost ? (
+              <PostOwnerActions postId={post.id} editHref={`/posts/${post.id}/edit`} />
             ) : null}
           </div>
 
