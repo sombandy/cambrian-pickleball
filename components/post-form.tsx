@@ -57,6 +57,14 @@ export function PostForm({
   const needsAnonymousFlow = mode === "create" && !isSignedIn;
   const isCreateMode = mode === "create";
 
+  function getCreateDestination() {
+    const params = new URLSearchParams({
+      sort: "newest",
+      page: "1",
+    });
+    return `${TOURNAMENT_FEEDBACK_PATH}?${params.toString()}`;
+  }
+
   function validatePost(values: { title: string; body: string }) {
     if (values.title.trim().length < 10) {
       setError("Title must be at least 10 characters.");
@@ -139,11 +147,12 @@ export function PostForm({
         clearPostDraft();
       }
 
-      const destination = payload?.post?.id
-        ? `/posts/${payload.post.id}`
-        : postId
-          ? `/posts/${postId}`
-          : TOURNAMENT_FEEDBACK_PATH;
+      const destination =
+        mode === "create"
+          ? getCreateDestination()
+          : postId
+            ? `/posts/${postId}`
+            : TOURNAMENT_FEEDBACK_PATH;
 
       router.push(destination);
       router.refresh();

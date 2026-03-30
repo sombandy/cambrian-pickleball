@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { MessageSquareText, PencilLine } from "lucide-react";
+import { ArrowLeft, MessageSquareText, PencilLine } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { CommentForm } from "@/components/comment-form";
 import { UpvoteToggle } from "@/components/upvote-toggle";
 import { getViewerAuth } from "@/lib/auth";
+import { TOURNAMENT_FEEDBACK_PATH } from "@/lib/constants";
 import { getPostDetail } from "@/lib/data";
 import {
   excerpt,
@@ -53,6 +54,14 @@ export default async function PostDetailPage({
   return (
     <main className="grid gap-5 pb-12">
       <section className="grid gap-5">
+        <Link
+          href={TOURNAMENT_FEEDBACK_PATH}
+          className="soft-button inline-flex w-fit items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to feedback feed
+        </Link>
+
         <article className="surface-card rounded-[30px] p-5 md:p-7">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="flex items-start gap-3">
