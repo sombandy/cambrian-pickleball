@@ -19,7 +19,7 @@ export function PostCard({ post, className }: { post: PostSummary; className?: s
     >
       <div className="mb-4 flex items-start justify-between gap-4">
         <div className="flex items-start gap-3">
-          <div className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#edf3ff_0%,#dfeaff_100%)] text-sm font-semibold text-court shadow-[inset_0_1px_0_rgba(255,255,255,0.85)]">
+          <div className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#f4f8e3_0%,#e8f0cb_100%)] text-sm font-semibold text-court shadow-[inset_0_1px_0_rgba(255,255,255,0.85)]">
             {getInitials(post.authorName)}
           </div>
           <div className="min-w-0">

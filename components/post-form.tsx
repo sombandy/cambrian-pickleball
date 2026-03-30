@@ -197,7 +197,7 @@ export function PostForm({
         isCreateMode ? "p-4 md:p-5" : "p-5 md:p-6",
       )}
     >
-      <div className="rounded-[24px] border border-outline/85 bg-white/84 px-4 py-3.5 shadow-[0_18px_34px_-34px_rgba(53,109,255,0.34),inset_0_1px_0_rgba(255,255,255,0.92)] md:px-4.5">
+      <div className="rounded-[24px] border border-outline/85 bg-white/84 px-4 py-3.5 shadow-[0_18px_34px_-34px_rgba(140,169,43,0.28),inset_0_1px_0_rgba(255,255,255,0.92)] md:px-4.5">
         <label className="block">
           <span
             className={cn(
