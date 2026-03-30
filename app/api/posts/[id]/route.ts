@@ -64,11 +64,17 @@ export async function DELETE(
     const { id } = await params;
 
     if (!viewer.userId) {
-      return jsonError("You must be signed in.", 401);
+      return jsonError("You must be signed in to delete posts.", 401);
     }
 
-    if (!viewer.isAdmin) {
-      return jsonError("Only admins can delete posts.", 403);
+    const existingPost = await getEditablePost(id);
+    if (!existingPost) {
+      return jsonError("Post not found.", 404);
+    }
+
+    const canDelete = viewer.isAdmin || existingPost.clerk_id === viewer.userId;
+    if (!canDelete) {
+      return jsonError("You do not have permission to delete this post.", 403);
     }
 
     const post = await deletePost(id);
