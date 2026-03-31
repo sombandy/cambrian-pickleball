@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     template: "%s | Cambrian Community Pickleball",
   },
   description:
-    "A simple home for Cambrian Community Pickleball, with local play, tournament updates, and community news.",
+    "A simple home for Cambrian Community Pickleball, with local play, tournament feedback, and community news.",
 };
 
 export default function RootLayout({
