@@ -1,4 +1,12 @@
-const focusAreas = ["Community play", "Tournament updates", "More details soon"];
+import Link from "next/link";
+
+import { TOURNAMENT_FEEDBACK_PATH } from "@/lib/constants";
+
+const focusAreas = [
+  { label: "Tournament feedback", href: TOURNAMENT_FEEDBACK_PATH },
+  { label: "Community play" },
+  { label: "More details soon" },
+];
 
 export default function HomePage() {
   return (
@@ -15,18 +23,28 @@ export default function HomePage() {
             Cambrian Community Pickleball is getting its new home.
           </h1>
           <p className="mt-4 max-w-[30ch] text-[1.02rem] leading-7 text-muted sm:mt-5 sm:max-w-2xl sm:text-[1.2rem] sm:leading-8">
-            We&apos;re building a simple place for local play, tournament updates, and
+            We&apos;re building a simple place for local play, tournament feedback, and
             community news. Full details will be here soon.
           </p>
 
           <div className="mt-6 flex flex-col items-start gap-2.5 sm:mt-8 sm:flex-row sm:flex-wrap sm:gap-3">
             {focusAreas.map((item) => (
-              <span
-                key={item}
-                className="px-0 py-1 text-[0.9rem] font-medium leading-5 text-ink/88 sm:text-sm"
-              >
-                {item}
-              </span>
+              item.href ? (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className="soft-button rounded-full px-4 py-2 text-[0.9rem] font-medium leading-5 text-ink sm:text-sm"
+                >
+                  {item.label}
+                </Link>
+              ) : (
+                <span
+                  key={item.label}
+                  className="px-0 py-1 text-[0.9rem] font-medium leading-5 text-ink/88 sm:text-sm"
+                >
+                  {item.label}
+                </span>
+              )
             ))}
           </div>
         </div>
