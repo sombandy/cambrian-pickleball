@@ -74,7 +74,9 @@ export default async function FeedbackPage({
 
       <section className="grid gap-4">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-sm font-medium tracking-wide text-muted">Recent posts</h2>
+          <h2 className="text-sm font-medium tracking-wide text-muted">
+            All feedback ({totalCount.toLocaleString()})
+          </h2>
           <SortTabs sort={sort} limit={pagination.limit} basePath={TOURNAMENT_FEEDBACK_PATH} />
         </div>
 
