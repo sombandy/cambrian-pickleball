@@ -45,9 +45,12 @@ export function PostForm({
   const pathname = usePathname();
   const { isSignedIn, user } = useUser();
   const [isPending, startTransition] = useTransition();
-  const [title, setTitle] = useState(initialValues?.title ?? "");
-  const [category, setCategory] = useState<Category>(initialValues?.category ?? "idea");
-  const [body, setBody] = useState(initialValues?.body ? htmlToPlainText(initialValues.body) : "");
+  const initialTitle = initialValues?.title ?? "";
+  const initialCategory = initialValues?.category ?? "idea";
+  const initialBody = initialValues?.body ? htmlToPlainText(initialValues.body) : "";
+  const [title, setTitle] = useState(initialTitle);
+  const [category, setCategory] = useState<Category>(initialCategory);
+  const [body, setBody] = useState(initialBody);
   const [guestStep, setGuestStep] = useState<"idle" | "choice" | "anonymous">("idle");
   const [error, setError] = useState<string | null>(null);
   const hasHandledDraftRef = useRef(false);
@@ -107,6 +110,14 @@ export function PostForm({
     router.push(`/sign-in?redirect_url=${encodeURIComponent(`${pathname}#share-feedback`)}`);
   }
 
+  function resetCreateForm() {
+    setTitle(initialTitle);
+    setBody(initialBody);
+    setCategory(initialCategory);
+    setGuestStep("idle");
+    setError(null);
+  }
+
   function submitPost(values?: { title: string; body: string; category: Category }) {
     const nextValues = values ?? { title, body, category };
 
@@ -145,6 +156,7 @@ export function PostForm({
 
       if (mode === "create") {
         clearPostDraft();
+        resetCreateForm();
       }
 
       const destination =
