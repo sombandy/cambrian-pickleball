@@ -1,9 +1,9 @@
 import Link from "next/link";
 
-import { TOURNAMENT_FEEDBACK_PATH } from "@/lib/constants";
+import { TOURNAMENT_INDEX_PATH } from "@/lib/constants";
 
 const focusAreas = [
-  { label: "Tournament feedback", href: TOURNAMENT_FEEDBACK_PATH },
+  { label: "Tournaments", href: TOURNAMENT_INDEX_PATH },
   { label: "Community play" },
   { label: "More details soon" },
 ];
@@ -23,7 +23,7 @@ export default function HomePage() {
             Cambrian Community Pickleball is getting its new home.
           </h1>
           <p className="mt-4 max-w-[30ch] text-[1.02rem] leading-7 text-muted sm:mt-5 sm:max-w-2xl sm:text-[1.2rem] sm:leading-8">
-            We&apos;re building a simple place for local play, tournament feedback, and
+            We&apos;re building a simple place for local play, tournament updates, and
             community news. Full details will be here soon.
           </p>
 

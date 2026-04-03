@@ -16,6 +16,7 @@ export const SORT_LABELS: Record<(typeof SORT_OPTIONS)[number], string> = {
 
 export const PAGE_SIZE = 12;
 export const ANONYMOUS_AUTHOR_NAME = "Anonymous";
+export const TOURNAMENT_INDEX_PATH = "/tournament";
 export const TOURNAMENT_FEEDBACK_PATH = "/tournament-feedback";
 
 export const RATE_LIMITS = {
