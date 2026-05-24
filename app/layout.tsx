@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Bricolage_Grotesque, Source_Sans_3 } from "next/font/google";
 
+import { SiteHeader } from "@/components/site-header";
+
 import "./globals.css";
 
 const displayFont = Bricolage_Grotesque({
@@ -36,8 +38,9 @@ export default function RootLayout({
     >
       <body className="min-h-full">
         <ClerkProvider>
-          <div className="min-h-screen">
-            <div className="mx-auto flex min-h-screen w-full max-w-4xl flex-col px-4 pb-12 pt-5 sm:px-6">
+          <div className="flex min-h-screen flex-col">
+            <SiteHeader />
+            <div className="mx-auto w-full max-w-4xl flex-1 px-4 pb-12 pt-5 sm:px-6">
               {children}
             </div>
           </div>
