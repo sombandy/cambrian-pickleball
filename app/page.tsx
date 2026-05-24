@@ -1,11 +1,10 @@
 import Link from "next/link";
 
-import { TOURNAMENT_INDEX_PATH } from "@/lib/constants";
+import { RANKINGS_PATH, TOURNAMENT_INDEX_PATH } from "@/lib/constants";
 
 const focusAreas = [
   { label: "Tournaments", href: TOURNAMENT_INDEX_PATH },
-  { label: "Community play" },
-  { label: "More details soon" },
+  { label: "Rankings", href: RANKINGS_PATH },
 ];
 
 export default function HomePage() {

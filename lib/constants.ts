@@ -18,6 +18,7 @@ export const PAGE_SIZE = 12;
 export const ANONYMOUS_AUTHOR_NAME = "Anonymous";
 export const TOURNAMENT_INDEX_PATH = "/tournament";
 export const TOURNAMENT_FEEDBACK_PATH = "/tournament-feedback";
+export const RANKINGS_PATH = "/rankings";
 
 export const RATE_LIMITS = {
   post: { scope: "post:create", limit: 5, windowHours: 1 },

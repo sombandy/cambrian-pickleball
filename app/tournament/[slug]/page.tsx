@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, MessageSquareText } from "lucide-react";
+import { MessageSquareText } from "lucide-react";
 import { notFound } from "next/navigation";
 
-import { TOURNAMENT_INDEX_PATH } from "@/lib/constants";
 import { getTournament, listTournaments } from "@/lib/tournaments";
 
 type TournamentPageProps = {
@@ -42,14 +41,6 @@ export default async function TournamentDetailPage({ params }: TournamentPagePro
   if (tournament.status === "upcoming") {
     return (
       <main className="grid gap-5 pb-12">
-        <Link
-          href={TOURNAMENT_INDEX_PATH}
-          className="inline-flex items-center gap-2 text-sm font-medium text-muted transition hover:text-ink"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          All tournaments
-        </Link>
-
         <section className="surface-card relative isolate overflow-hidden rounded-[32px] px-5 py-10 sm:px-8 sm:py-12">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(140,169,43,0.18),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(93,115,32,0.1),transparent_26%)]" />
 
@@ -85,14 +76,6 @@ export default async function TournamentDetailPage({ params }: TournamentPagePro
 
   return (
     <main className="grid gap-5 pb-12">
-      <Link
-        href={TOURNAMENT_INDEX_PATH}
-        className="inline-flex items-center gap-2 text-sm font-medium text-muted transition hover:text-ink"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        All tournaments
-      </Link>
-
       <section className="surface-card relative isolate overflow-hidden rounded-[34px] p-3 sm:p-4">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(140,169,43,0.2),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(93,115,32,0.14),transparent_24%)]" />
 

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 
 import { PaginationControls } from "@/components/pagination-controls";
 import { PostCard } from "@/components/post-card";
@@ -10,7 +9,6 @@ import { SortTabs } from "@/components/sort-tabs";
 import { PAGE_SIZE, TOURNAMENT_FEEDBACK_PATH } from "@/lib/constants";
 import { getViewerAuth } from "@/lib/auth";
 import { listPosts } from "@/lib/data";
-import { getTournamentPath } from "@/lib/tournaments";
 import { paginationSchema, sortSchema } from "@/lib/validators";
 
 export const metadata: Metadata = {
@@ -48,14 +46,6 @@ export default async function FeedbackPage({
 
   return (
     <main className="grid gap-5 pb-12">
-      <Link
-        href={getTournamentPath("11")}
-        className="inline-flex items-center gap-2 text-sm font-medium text-muted transition hover:text-ink"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to tournament 11
-      </Link>
-
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-2xl font-semibold tracking-tight text-ink md:text-3xl">
           Help shape tournament 11.
