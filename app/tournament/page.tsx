@@ -69,12 +69,25 @@ export default function TournamentIndexPage() {
             ) : (
               <div className="mt-5 flex min-h-56 items-end overflow-hidden rounded-[24px] border border-outline/80 bg-[radial-gradient(circle_at_top_left,rgba(140,169,43,0.28),transparent_34%),linear-gradient(180deg,rgba(255,255,252,0.96)_0%,rgba(246,249,232,0.94)_100%)] p-6">
                 <div>
-                  <div className="font-display text-6xl leading-none font-semibold tracking-tight text-ink/90">
-                    {tournament.edition}
-                  </div>
-                  <p className="mt-3 text-sm font-medium uppercase tracking-[0.18em] text-muted">
-                    Coming up
-                  </p>
+                  {tournament.upcomingTimeframe ? (
+                    <>
+                      <p className="text-sm font-medium uppercase tracking-[0.18em] text-muted">
+                        Coming up in
+                      </p>
+                      <div className="mt-3 font-display text-4xl leading-[1.05] font-semibold tracking-tight text-ink/90">
+                        {tournament.upcomingTimeframe}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="font-display text-6xl leading-none font-semibold tracking-tight text-ink/90">
+                        {tournament.edition}
+                      </div>
+                      <p className="mt-3 text-sm font-medium uppercase tracking-[0.18em] text-muted">
+                        Coming up
+                      </p>
+                    </>
+                  )}
                 </div>
               </div>
             )}
@@ -82,6 +95,13 @@ export default function TournamentIndexPage() {
             <p className="mt-4 max-w-[34ch] text-sm leading-6 text-muted sm:text-[0.98rem]">
               {tournament.summary}
             </p>
+
+            {tournament.organizers ? (
+              <p className="mt-3 text-sm font-medium text-muted">
+                Organized by{" "}
+                <span className="font-semibold text-ink">{tournament.organizers}</span>
+              </p>
+            ) : null}
           </Link>
         ))}
       </section>

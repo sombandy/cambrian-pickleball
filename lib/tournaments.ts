@@ -1,4 +1,4 @@
-import { TOURNAMENT_FEEDBACK_PATH, TOURNAMENT_INDEX_PATH } from "@/lib/constants";
+import { TOURNAMENT_INDEX_PATH } from "@/lib/constants";
 
 export type TournamentStatus = "completed" | "upcoming";
 
@@ -23,6 +23,11 @@ export type Tournament = {
   championImage?: TournamentImage;
   participantImage?: TournamentImage;
   feedbackHref?: string;
+  organizers?: string;
+  // Shown in the index-card placeholder as "Coming up in <timeframe>".
+  upcomingTimeframe?: string;
+  // Rendered by a dedicated static route instead of /tournament/[slug].
+  customPage?: boolean;
 };
 
 export function getTournamentPath(slug: string) {
@@ -45,14 +50,17 @@ const tournamentTenParticipantImage: TournamentImage = {
 
 const tournaments: Tournament[] = [
   {
-    slug: "11",
-    edition: 11,
-    title: "11th Cambrian Pickleball Tournament",
-    dateLabel: "Coming up",
-    summary: "The next Cambrian community tournament is in planning now.",
+    slug: "competitive-1",
+    edition: 1,
+    title: "Cambrian Competitive Tournament 1",
+    dateLabel: "September 2026 · AVAC",
+    summary:
+      "A purely competitive doubles event. Choose your partner, pick your division, and compete for the trophy.",
     status: "upcoming",
     statusLabel: "Upcoming",
-    feedbackHref: TOURNAMENT_FEEDBACK_PATH,
+    organizers: "Abhinay and Bhanu",
+    upcomingTimeframe: "September 2026",
+    customPage: true,
   },
   {
     slug: "10",
@@ -64,6 +72,7 @@ const tournaments: Tournament[] = [
     snapshotLine: "An intense day of play ended with a nail-biting final decided by a single point.",
     status: "completed",
     statusLabel: "Completed",
+    organizers: "Ankit, Badhri and Monish",
     previewImage: tournamentTenChampionImage,
     championImage: tournamentTenChampionImage,
     participantImage: tournamentTenParticipantImage,
