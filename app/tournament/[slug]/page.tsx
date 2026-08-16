@@ -27,7 +27,9 @@ export async function generateMetadata({
 }
 
 export function generateStaticParams() {
-  return listTournaments().map((tournament) => ({ slug: tournament.slug }));
+  return listTournaments()
+    .filter((tournament) => !tournament.customPage)
+    .map((tournament) => ({ slug: tournament.slug }));
 }
 
 export default async function TournamentDetailPage({ params }: TournamentPageProps) {
@@ -87,6 +89,12 @@ export default async function TournamentDetailPage({ params }: TournamentPagePro
             <p className="mt-3 text-sm leading-6 text-muted">
               {tournament.detailsLine}
             </p>
+            {tournament.organizers ? (
+              <p className="mt-2 text-sm font-medium text-muted">
+                Organized by{" "}
+                <span className="font-semibold text-ink">{tournament.organizers}</span>
+              </p>
+            ) : null}
             <p className="mt-3 text-[1.02rem] leading-6 font-medium text-ink sm:text-[1.12rem]">
               {tournament.snapshotLine}
             </p>
