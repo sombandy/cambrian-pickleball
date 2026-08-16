@@ -22,6 +22,7 @@ type RegistrationPair = {
 type Registrations = {
   advanced: RegistrationPair[];
   intermediate: RegistrationPair[];
+  uncategorized: RegistrationPair[];
   individuals: string[];
 };
 
@@ -102,14 +103,51 @@ function parseRegistrations(csvText: string): Registrations {
     }))
     .filter((registration) => registration.name !== "");
 
-  const pairs = registrations.filter((registration) => registration.partner !== "");
+  const normalize = (name: string) => name.toLowerCase().replace(/\s+/g, " ").trim();
+
+  // Both partners may submit the form; keep one row per unordered pair.
+  const seenPairs = new Set<string>();
+  const pairs = registrations
+    .filter((registration) => registration.partner !== "")
+    .filter((registration) => {
+      const key = [registration.name, registration.partner]
+        .map(normalize)
+        .sort()
+        .join("|");
+      if (seenPairs.has(key)) {
+        return false;
+      }
+      seenPairs.add(key);
+      return true;
+    });
+
+  const isAdvanced = (pair: RegistrationPair & { category: string }) =>
+    pair.category.includes("advanced");
+  const isIntermediate = (pair: RegistrationPair & { category: string }) =>
+    !isAdvanced(pair) && pair.category.includes("intermediate");
+
+  // A player whose stag row predates finding a partner shouldn't stay listed.
+  const pairedNames = new Set(
+    pairs.flatMap((pair) => [normalize(pair.name), normalize(pair.partner)]),
+  );
+  const seenIndividuals = new Set<string>();
+  const individuals = registrations
+    .filter((registration) => registration.partner === "")
+    .map((registration) => registration.name)
+    .filter((name) => {
+      const key = normalize(name);
+      if (pairedNames.has(key) || seenIndividuals.has(key)) {
+        return false;
+      }
+      seenIndividuals.add(key);
+      return true;
+    });
 
   return {
-    advanced: pairs.filter((pair) => pair.category.includes("advanced")),
-    intermediate: pairs.filter((pair) => pair.category.includes("intermediate")),
-    individuals: registrations
-      .filter((registration) => registration.partner === "")
-      .map((registration) => registration.name),
+    advanced: pairs.filter(isAdvanced),
+    intermediate: pairs.filter(isIntermediate),
+    uncategorized: pairs.filter((pair) => !isAdvanced(pair) && !isIntermediate(pair)),
+    individuals,
   };
 }
 
@@ -352,7 +390,7 @@ function PairList({ pairs }: { pairs: RegistrationPair[] }) {
     <ul className="mt-4 divide-y divide-outline/70">
       {pairs.map((pair, index) => (
         <li
-          key={`${pair.name}-${pair.partner}`}
+          key={`${pair.name}-${pair.partner}-${index}`}
           className="py-2.5 text-[0.95rem] font-medium text-ink"
         >
           {index + 1}. {pair.name} &amp; {pair.partner}
@@ -366,14 +404,16 @@ function DivisionCard({
   title,
   pairs,
   loading,
+  badge = "Doubles Open",
 }: {
   title: string;
   pairs: RegistrationPair[] | null;
   loading: boolean;
+  badge?: string;
 }) {
   return (
     <div className="rounded-[24px] border border-outline/80 bg-white/80 p-5 sm:p-6">
-      <Badge>Doubles Open</Badge>
+      <Badge>{badge}</Badge>
       <h3 className="mt-3 font-display text-xl font-semibold tracking-tight text-ink">
         {title}
       </h3>
@@ -422,7 +462,9 @@ function PlayersTab() {
 
   const loading = state.status === "loading";
   const ready = state.status === "ready";
-  const totalPairs = ready ? state.advanced.length + state.intermediate.length : 0;
+  const totalPairs = ready
+    ? state.advanced.length + state.intermediate.length + state.uncategorized.length
+    : 0;
 
   return (
     <section className="surface-card rounded-[30px] px-5 py-7 sm:px-8 sm:py-8">
@@ -455,6 +497,17 @@ function PlayersTab() {
         />
       </div>
 
+      {ready && state.uncategorized.length > 0 ? (
+        <div className="mt-4">
+          <DivisionCard
+            title="Uncategorized"
+            badge="Needs Category"
+            pairs={state.uncategorized}
+            loading={false}
+          />
+        </div>
+      ) : null}
+
       <div className="mt-5 rounded-[24px] border border-outline/80 bg-court-soft/30 p-5 sm:p-6">
         <h3 className="font-display text-lg font-semibold tracking-tight text-ink">
           Looking for a Partner?
@@ -472,9 +525,9 @@ function PlayersTab() {
             </p>
           ) : (
             <ul className="mt-4 divide-y divide-outline/70">
-              {state.individuals.map((name) => (
+              {state.individuals.map((name, index) => (
                 <li
-                  key={name}
+                  key={`${name}-${index}`}
                   className="py-2.5 text-[0.95rem] font-medium text-ink"
                 >
                   {name}
@@ -518,7 +571,13 @@ export function CompetitiveTournamentTabs() {
         })}
       </div>
 
-      {activeTab === "rules" ? <RulesTab /> : <PlayersTab />}
+      {/* Both tabs stay mounted so switching back doesn't refetch registrations. */}
+      <div className={activeTab === "rules" ? undefined : "hidden"}>
+        <RulesTab />
+      </div>
+      <div className={activeTab === "players" ? undefined : "hidden"}>
+        <PlayersTab />
+      </div>
     </div>
   );
 }
