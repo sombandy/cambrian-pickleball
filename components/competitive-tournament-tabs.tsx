@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 const SHEET_CSV_URL =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTrs0XwNUq7Iy9MqOs48egECDl14IyXFhiYNa5cBqHSkxUbirRO2udwNrQ3juMubRiifEQM6FnNOkQF/pub?gid=1790095873&single=true&output=csv";
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTrs0XwNUq7Iy9MqOs48egECDl14IyXFhiYNa5cBqHSkxUbirRO2udwNrQ3juMubRiifEQM6FnNOkQF/pub?gid=2054120497&single=true&output=csv";
 
 const TABS = [
   { id: "rules", label: "Tournament Info & Rules" },
@@ -356,6 +356,13 @@ function RulesTab() {
           tournament format — including pools, brackets, round-robin structure,
           and playoff qualification — will be determined after registration
           closes and will depend on the number of entries in each category.
+        </Highlight>
+
+        <Highlight>
+          <strong className="font-semibold">Cambrian DUPR Ratings</strong>
+          <br />
+          All matches played in this tournament will contribute to the
+          players&apos; Cambrian DUPR ratings.
         </Highlight>
       </SectionCard>
 
