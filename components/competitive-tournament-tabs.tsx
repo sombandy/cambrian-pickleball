@@ -147,34 +147,6 @@ function SectionCard({
   );
 }
 
-function Badge({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="inline-flex rounded-full border border-court/15 bg-court-soft px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-court">
-      {children}
-    </span>
-  );
-}
-
-function InfoTile({
-  badge,
-  title,
-  children,
-}: {
-  badge: string;
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="rounded-[24px] border border-outline/80 bg-white/80 p-5">
-      <Badge>{badge}</Badge>
-      <h3 className="mt-3 font-display text-lg font-semibold tracking-tight text-ink">
-        {title}
-      </h3>
-      <p className="mt-1 text-sm leading-6 text-muted">{children}</p>
-    </div>
-  );
-}
-
 function Highlight({ children }: { children: React.ReactNode }) {
   return (
     <div className="rounded-2xl border-l-[3px] border-court bg-court-soft/60 px-5 py-4 text-[0.95rem] leading-7 text-ink">
@@ -233,14 +205,19 @@ export function CompetitiveTournamentTabs() {
       </SectionCard>
 
       <SectionCard title="When & Where">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <InfoTile badge="Location" title="AVAC">
-            The tournament will be held at AVAC.
-          </InfoTile>
-          <InfoTile badge="Date" title="September 19, 2026">
-            The tournament will be held on Saturday, September 19, 2026.
-          </InfoTile>
-        </div>
+        <p className="font-display text-lg font-semibold tracking-tight text-ink">
+          Saturday, September 19, 2026
+        </p>
+        <p className="font-display text-lg font-semibold tracking-tight text-ink">
+          <a
+            href="https://www.avac.us/Club/Scripts/Home/home.asp"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-court underline decoration-court/40 underline-offset-4 transition hover:decoration-court"
+          >
+            Almaden Valley Athletic Club (AVAC)
+          </a>
+        </p>
       </SectionCard>
 
       <PlayersSection />
@@ -344,27 +321,23 @@ function DivisionCard({
   title,
   pairs,
   loading,
-  badge = "Doubles Open",
 }: {
   title: string;
   pairs: RegistrationPair[] | null;
   loading: boolean;
-  badge?: string;
 }) {
   return (
     <div className="rounded-[24px] border border-outline/80 bg-white/80 p-5 sm:p-6">
-      <Badge>{badge}</Badge>
-      <h3 className="mt-3 font-display text-xl font-semibold tracking-tight text-ink">
+      <h3 className="font-display text-xl font-semibold tracking-tight text-ink">
         {title}
       </h3>
-      <p className="mt-1 text-sm text-muted">
-        {loading
-          ? "Loading…"
-          : pairs
-            ? `${pairs.length} pair${pairs.length === 1 ? "" : "s"} registered`
-            : "Unable to load registrations."}
-      </p>
-      {pairs ? <PairList pairs={pairs} /> : null}
+      {!pairs ? (
+        <p className="mt-1 text-sm text-muted">
+          {loading ? "Loading…" : "Unable to load registrations."}
+        </p>
+      ) : (
+        <PairList pairs={pairs} />
+      )}
     </div>
   );
 }
