@@ -72,7 +72,7 @@ export default function TournamentIndexPage() {
                   {tournament.upcomingTimeframe ? (
                     <>
                       <p className="text-sm font-medium uppercase tracking-[0.18em] text-muted">
-                        Coming up in
+                        Coming up on
                       </p>
                       <div className="mt-3 font-display text-4xl leading-[1.05] font-semibold tracking-tight text-ink/90">
                         {tournament.upcomingTimeframe}
