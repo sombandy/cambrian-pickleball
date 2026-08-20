@@ -2,17 +2,8 @@
 
 import { useEffect, useState } from "react";
 
-import { cn } from "@/lib/utils";
-
 const SHEET_CSV_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vTrs0XwNUq7Iy9MqOs48egECDl14IyXFhiYNa5cBqHSkxUbirRO2udwNrQ3juMubRiifEQM6FnNOkQF/pub?gid=2054120497&single=true&output=csv";
-
-const TABS = [
-  { id: "rules", label: "Tournament Info & Rules" },
-  { id: "players", label: "Who's Playing" },
-] as const;
-
-type TabId = (typeof TABS)[number]["id"];
 
 type RegistrationPair = {
   name: string;
@@ -20,9 +11,7 @@ type RegistrationPair = {
 };
 
 type Registrations = {
-  advanced: RegistrationPair[];
-  intermediate: RegistrationPair[];
-  uncategorized: RegistrationPair[];
+  pairs: RegistrationPair[];
   individuals: string[];
 };
 
@@ -84,20 +73,18 @@ function parseRegistrations(csvText: string): Registrations {
   const headers = rows[0].map((header) => header.toLowerCase().trim());
   const columnIndex = (name: string) => headers.indexOf(name.toLowerCase());
 
-  const categoryColumn = columnIndex("Tournament Category?");
   const nameColumn = columnIndex("Your Name?");
   const partnerColumn = columnIndex(
     "If registering as a Pair, Who is your partner?",
   );
 
-  if (categoryColumn < 0 || nameColumn < 0 || partnerColumn < 0) {
+  if (nameColumn < 0 || partnerColumn < 0) {
     throw new Error("Sheet column names do not match");
   }
 
   const registrations = rows
     .slice(1)
     .map((row) => ({
-      category: (row[categoryColumn] ?? "").trim().toLowerCase(),
       name: (row[nameColumn] ?? "").trim(),
       partner: (row[partnerColumn] ?? "").trim(),
     }))
@@ -121,11 +108,6 @@ function parseRegistrations(csvText: string): Registrations {
       return true;
     });
 
-  const isAdvanced = (pair: RegistrationPair & { category: string }) =>
-    pair.category.includes("advanced");
-  const isIntermediate = (pair: RegistrationPair & { category: string }) =>
-    !isAdvanced(pair) && pair.category.includes("intermediate");
-
   // A player whose stag row predates finding a partner shouldn't stay listed.
   const pairedNames = new Set(
     pairs.flatMap((pair) => [normalize(pair.name), normalize(pair.partner)]),
@@ -143,12 +125,7 @@ function parseRegistrations(csvText: string): Registrations {
       return true;
     });
 
-  return {
-    advanced: pairs.filter(isAdvanced),
-    intermediate: pairs.filter(isIntermediate),
-    uncategorized: pairs.filter((pair) => !isAdvanced(pair) && !isIntermediate(pair)),
-    individuals,
-  };
+  return { pairs, individuals };
 }
 
 function SectionCard({
@@ -214,7 +191,7 @@ function SubHeading({ children }: { children: React.ReactNode }) {
   );
 }
 
-function RulesTab() {
+export function CompetitiveTournamentTabs() {
   return (
     <div className="grid gap-5">
       <SectionCard title="A New Kind of Tournament">
@@ -260,16 +237,13 @@ function RulesTab() {
           <InfoTile badge="Location" title="AVAC">
             The tournament will be held at AVAC.
           </InfoTile>
-          <InfoTile badge="Date" title="September 2026">
-            The final date will be based on the availability of the majority of
-            registered players.
+          <InfoTile badge="Date" title="September 19, 2026">
+            The tournament will be held on Saturday, September 19, 2026.
           </InfoTile>
         </div>
-        <p>
-          Once registration is complete and player availability is collected, we
-          will announce the final tournament date.
-        </p>
       </SectionCard>
+
+      <PlayersSection />
 
       <SectionCard title="Rules & Guidance">
         <p>
@@ -278,20 +252,9 @@ function RulesTab() {
           doubles tournament, participants are free to choose their own partner
           and register together as a doubles pair.
         </p>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <InfoTile badge="Division 1" title="Advanced">
-            Open to all players.
-          </InfoTile>
-          <InfoTile badge="Division 2" title="Intermediate">
-            Open to all players.
-          </InfoTile>
-        </div>
 
         <SubHeading>Choose Your Own Partner</SubHeading>
-        <p>
-          Players register as a doubles pair and are free to register in either
-          division based on where they feel they can compete most appropriately.
-        </p>
+        <p>Players choose their own partner and register as a doubles pair.</p>
 
         <Highlight>
           <strong className="font-semibold">Looking for a Partner?</strong>
@@ -300,35 +263,6 @@ function RulesTab() {
           individuals. A list of players registered individually will be
           published to help facilitate partner matching.
         </Highlight>
-
-        <SubHeading>No Sandbagging</SubHeading>
-        <p>
-          To ensure fair and competitive matchups,{" "}
-          <strong className="font-semibold text-ink">
-            sandbagging will not be permitted
-          </strong>
-          . Organizers may review registrations and pairings across categories.
-          If two players who are clearly playing at an Advanced level register
-          together in the Intermediate category, they may be asked to compete in
-          the Advanced category instead.
-        </p>
-        <p>
-          The goal is to maintain a competitive and enjoyable experience for
-          everyone while keeping category selection as open and flexible as
-          possible.
-        </p>
-
-        <SubHeading>Choose Your Competitive Level</SubHeading>
-        <p>
-          Players are encouraged to select the category where they believe they
-          can have the{" "}
-          <strong className="font-semibold text-ink">
-            most competitive and enjoyable matches
-          </strong>
-          . Choosing the right level gives each pair the best opportunity to
-          compete strongly, advance through the tournament, and ultimately
-          contend for the trophy.
-        </p>
 
         <SubHeading>Competitive Group Play</SubHeading>
         <p>
@@ -368,9 +302,8 @@ function RulesTab() {
 
       <SectionCard title="Registration Fees">
         <p>
-          Registration fees for each category will be finalized after
-          registration closes and will depend on the total number of
-          participants registered.
+          The registration fee is{" "}
+          <strong className="font-semibold text-ink">$40 per player</strong>.
         </p>
         <p>
           This approach ensures that tournament expenses, including{" "}
@@ -436,7 +369,7 @@ function DivisionCard({
   );
 }
 
-function PlayersTab() {
+function PlayersSection() {
   const [state, setState] = useState<RegistrationState>({ status: "loading" });
 
   useEffect(() => {
@@ -469,51 +402,20 @@ function PlayersTab() {
 
   const loading = state.status === "loading";
   const ready = state.status === "ready";
-  const totalPairs = ready
-    ? state.advanced.length + state.intermediate.length + state.uncategorized.length
-    : 0;
 
   return (
     <section className="surface-card rounded-[30px] px-5 py-7 sm:px-8 sm:py-8">
       <h2 className="font-display text-2xl leading-tight font-semibold tracking-tight text-ink sm:text-[1.7rem]">
         Who&apos;s Playing
       </h2>
-      <p className="mt-4 text-[0.98rem] leading-7 text-muted">
-        Registered pairs appear here automatically from the tournament
-        registration sheet.
-      </p>
 
-      <Highlight>
-        {loading
-          ? "Loading registrations…"
-          : ready
-            ? `Showing ${totalPairs} registered pair${totalPairs === 1 ? "" : "s"} and ${state.individuals.length} individual registration${state.individuals.length === 1 ? "" : "s"}.`
-            : "Registrations could not be loaded right now. Please check back soon."}
-      </Highlight>
-
-      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+      <div className="mt-5">
         <DivisionCard
-          title="Advanced"
-          pairs={ready ? state.advanced : null}
-          loading={loading}
-        />
-        <DivisionCard
-          title="Intermediate"
-          pairs={ready ? state.intermediate : null}
+          title="Registered Pairs"
+          pairs={ready ? state.pairs : null}
           loading={loading}
         />
       </div>
-
-      {ready && state.uncategorized.length > 0 ? (
-        <div className="mt-4">
-          <DivisionCard
-            title="Uncategorized"
-            badge="Needs Category"
-            pairs={state.uncategorized}
-            loading={false}
-          />
-        </div>
-      ) : null}
 
       <div className="mt-5 rounded-[24px] border border-outline/80 bg-court-soft/30 p-5 sm:p-6">
         <h3 className="font-display text-lg font-semibold tracking-tight text-ink">
@@ -547,44 +449,5 @@ function PlayersTab() {
         )}
       </div>
     </section>
-  );
-}
-
-export function CompetitiveTournamentTabs() {
-  const [activeTab, setActiveTab] = useState<TabId>("rules");
-
-  return (
-    <div className="grid gap-5">
-      <div className="inline-flex w-fit max-w-full overflow-x-auto rounded-[22px] border border-white/80 bg-white/82 p-1.5 shadow-[0_20px_34px_-30px_rgba(30,41,59,0.32)] backdrop-blur-xl">
-        {TABS.map((tab) => {
-          const active = tab.id === activeTab;
-
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              aria-pressed={active}
-              className={cn(
-                "whitespace-nowrap rounded-2xl px-4 py-2 text-sm font-semibold transition",
-                active
-                  ? "primary-button shadow-[0_14px_24px_-18px_rgba(140,169,43,0.52)]"
-                  : "soft-button cursor-pointer border-transparent bg-transparent text-muted shadow-none hover:border-white/80 hover:bg-white/88 hover:text-ink",
-              )}
-            >
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Both tabs stay mounted so switching back doesn't refetch registrations. */}
-      <div className={activeTab === "rules" ? undefined : "hidden"}>
-        <RulesTab />
-      </div>
-      <div className={activeTab === "players" ? undefined : "hidden"}>
-        <PlayersTab />
-      </div>
-    </div>
   );
 }

@@ -53,13 +53,13 @@ const tournaments: Tournament[] = [
     slug: "competitive-1",
     edition: 1,
     title: "Cambrian Competitive Tournament 1",
-    dateLabel: "September 2026 · AVAC",
+    dateLabel: "Saturday, September 19, 2026 · AVAC",
     summary:
       "A purely competitive doubles event. Choose your partner, pick your division, and compete for the trophy.",
     status: "upcoming",
     statusLabel: "Upcoming",
     organizers: "Abhinay and Bhanu",
-    upcomingTimeframe: "September 2026",
+    upcomingTimeframe: "September 19, 2026",
     customPage: true,
   },
   {
