@@ -55,11 +55,16 @@ const tournaments: Tournament[] = [
     title: "Cambrian Competitive Tournament 1",
     dateLabel: "Saturday, September 19, 2026 · AVAC",
     summary:
-      "A purely competitive doubles event. Choose your partner, pick your division, and compete for the trophy.",
-    status: "upcoming",
-    statusLabel: "Upcoming",
+      "A purely competitive doubles event. Abhinay / Nirav won the Advanced title and Jaynesh / Basavraj took Intermediate gold.",
+    status: "completed",
+    statusLabel: "Completed",
     organizers: "Abhinay and Bhanu",
-    upcomingTimeframe: "September 19, 2026",
+    previewImage: {
+      src: "/images/tournaments/competitive-1/participants.jpg",
+      alt: "Participants of Cambrian Competitive Tournament 1 gathered on court at AVAC.",
+      width: 1600,
+      height: 900,
+    },
     customPage: true,
   },
   {
