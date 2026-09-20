@@ -1,131 +1,7 @@
-"use client";
+import Image from "next/image";
 
-import { useEffect, useState } from "react";
-
-const SHEET_CSV_URL =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTrs0XwNUq7Iy9MqOs48egECDl14IyXFhiYNa5cBqHSkxUbirRO2udwNrQ3juMubRiifEQM6FnNOkQF/pub?gid=2054120497&single=true&output=csv";
-
-type RegistrationPair = {
-  name: string;
-  partner: string;
-};
-
-type Registrations = {
-  pairs: RegistrationPair[];
-  individuals: string[];
-};
-
-type RegistrationState =
-  | { status: "loading" }
-  | { status: "error" }
-  | ({ status: "ready" } & Registrations);
-
-function parseCsv(text: string): string[][] {
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let cell = "";
-  let quoted = false;
-
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i];
-    const next = text[i + 1];
-
-    if (char === '"' && quoted && next === '"') {
-      cell += '"';
-      i++;
-    } else if (char === '"') {
-      quoted = !quoted;
-    } else if (char === "," && !quoted) {
-      row.push(cell.trim());
-      cell = "";
-    } else if ((char === "\n" || char === "\r") && !quoted) {
-      if (char === "\r" && next === "\n") {
-        i++;
-      }
-      row.push(cell.trim());
-      if (row.some((value) => value !== "")) {
-        rows.push(row);
-      }
-      row = [];
-      cell = "";
-    } else {
-      cell += char;
-    }
-  }
-
-  if (cell !== "" || row.length > 0) {
-    row.push(cell.trim());
-    if (row.some((value) => value !== "")) {
-      rows.push(row);
-    }
-  }
-
-  return rows;
-}
-
-function parseRegistrations(csvText: string): Registrations {
-  const rows = parseCsv(csvText);
-
-  if (rows.length < 2) {
-    throw new Error("No registrations found");
-  }
-
-  const headers = rows[0].map((header) => header.toLowerCase().trim());
-  const columnIndex = (name: string) => headers.indexOf(name.toLowerCase());
-
-  const nameColumn = columnIndex("Your Name?");
-  const partnerColumn = columnIndex(
-    "If registering as a Pair, Who is your partner?",
-  );
-
-  if (nameColumn < 0 || partnerColumn < 0) {
-    throw new Error("Sheet column names do not match");
-  }
-
-  const registrations = rows
-    .slice(1)
-    .map((row) => ({
-      name: (row[nameColumn] ?? "").trim(),
-      partner: (row[partnerColumn] ?? "").trim(),
-    }))
-    .filter((registration) => registration.name !== "");
-
-  const normalize = (name: string) => name.toLowerCase().replace(/\s+/g, " ").trim();
-
-  // Both partners may submit the form; keep one row per unordered pair.
-  const seenPairs = new Set<string>();
-  const pairs = registrations
-    .filter((registration) => registration.partner !== "")
-    .filter((registration) => {
-      const key = [registration.name, registration.partner]
-        .map(normalize)
-        .sort()
-        .join("|");
-      if (seenPairs.has(key)) {
-        return false;
-      }
-      seenPairs.add(key);
-      return true;
-    });
-
-  // A player whose stag row predates finding a partner shouldn't stay listed.
-  const pairedNames = new Set(
-    pairs.flatMap((pair) => [normalize(pair.name), normalize(pair.partner)]),
-  );
-  const seenIndividuals = new Set<string>();
-  const individuals = registrations
-    .filter((registration) => registration.partner === "")
-    .map((registration) => registration.name)
-    .filter((name) => {
-      const key = normalize(name);
-      if (pairedNames.has(key) || seenIndividuals.has(key)) {
-        return false;
-      }
-      seenIndividuals.add(key);
-      return true;
-    });
-
-  return { pairs, individuals };
+function Strong({ children }: { children: React.ReactNode }) {
+  return <strong className="font-semibold text-ink">{children}</strong>;
 }
 
 function SectionCard({
@@ -163,9 +39,108 @@ function SubHeading({ children }: { children: React.ReactNode }) {
   );
 }
 
+function BulletList({ children }: { children: React.ReactNode }) {
+  return <ul className="list-disc space-y-1.5 pl-5">{children}</ul>;
+}
+
+function InfoCard({
+  badge,
+  title,
+  children,
+}: {
+  badge: string;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-[24px] border border-outline/80 bg-white/80 p-5 sm:p-6">
+      <span className="inline-flex rounded-full border border-court/15 bg-court-soft px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-court">
+        {badge}
+      </span>
+      <h3 className="mt-3 font-display text-xl font-semibold tracking-tight text-ink">
+        {title}
+      </h3>
+      {children}
+    </div>
+  );
+}
+
+const FINAL_RESULTS = [
+  {
+    category: "Advanced",
+    image: {
+      src: "/images/tournaments/competitive-1/advanced-champions.jpg",
+      alt: "Abhinay and Nirav, Advanced champions, wearing their first-place medals on court.",
+    },
+    standings: [
+      { pair: "Abhinay / Nirav", medal: "Gold" },
+      { pair: "Rajesh / Aditya", medal: "Silver" },
+      { pair: "Satish / Raja" },
+      { pair: "Arun / Shivesh (Piyush)" },
+      { pair: "Monish / Muth" },
+      { pair: "Som / Naresh" },
+    ],
+  },
+  {
+    category: "Intermediate",
+    image: {
+      src: "/images/tournaments/competitive-1/intermediate-champions.jpg",
+      alt: "Jaynesh and Basavraj, Intermediate champions, wearing their first-place medals on court.",
+    },
+    standings: [
+      { pair: "Jaynesh / Basavraj", medal: "Gold" },
+      { pair: "Ankit / Krishna", medal: "Silver" },
+      { pair: "Vijay / Kaushik" },
+      { pair: "Bhanu / Srini" },
+      { pair: "Rajib / Venkata" },
+    ],
+  },
+];
+
+const GROUPS = [
+  {
+    name: "Group A",
+    pairs: [
+      "Abhinay / Nirav",
+      "Ankit / Krishna",
+      "Monish / Muth",
+      "Satish / Raja",
+      "Vijay / Kaushik",
+    ],
+  },
+  {
+    name: "Group B",
+    pairs: [
+      "Bhanu / Srini",
+      "Rajesh / Aditya",
+      "Jaynesh / Basavraj",
+      "Arun / Shivesh (Piyush)",
+      "Rajib / Venkata",
+      "Som / Naresh",
+    ],
+  },
+];
+
+const TOURNAMENT_FLOW = [
+  "11 Teams",
+  "Group A: 5 Teams + Group B: 6 Teams",
+  "Initial League Round",
+  "Top 2 from Each Group → Advanced",
+  "3rd Group A + 3rd & 4th Group B → Stack Ranked",
+  "#1 Ranked → 5th Advanced Team",
+  "Remaining 2 Teams",
+  "Played Each Other → Higher-Ranked Team Advances / Did Not Play → Rally Game to 11 Determines Qualifier",
+  "6 Advanced Teams | 5 Intermediate Teams",
+  "Advanced Round Robin | Intermediate Round Robin",
+  "Top 2 in Each Category",
+  "Advanced Final | Intermediate Final",
+];
+
 export function CompetitiveTournamentTabs() {
   return (
     <div className="grid gap-5">
+      <FinalResultsSection />
+
       <SectionCard title="A New Kind of Tournament">
         <p>
           For the past several years, our neighborhood pickleball tournaments
@@ -220,7 +195,310 @@ export function CompetitiveTournamentTabs() {
         </p>
       </SectionCard>
 
-      <PlayersSection />
+      <GroupingsSection />
+
+      <SectionCard title="Tournament Format">
+        <p>
+          The tournament will begin with all 11 teams competing together,
+          without an Advanced or Intermediate designation. Teams will be split
+          into two groups for the initial league round, and their performance
+          will determine which teams advance to the Advanced category.
+        </p>
+
+        <SubHeading>1. Initial Group Stage</SubHeading>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <InfoCard badge="Group A" title="5 Teams">
+            <p className="mt-2">
+              Each team will play every other team in the group.
+            </p>
+            <p className="mt-2">
+              <Strong>4 matches per team</Strong>
+            </p>
+          </InfoCard>
+          <InfoCard badge="Group B" title="6 Teams">
+            <p className="mt-2">
+              Each team will play 4 of the other 5 teams in the group. Each team
+              will have one team they do not play.
+            </p>
+            <p className="mt-2">
+              <Strong>4 matches per team</Strong>
+            </p>
+          </InfoCard>
+        </div>
+
+        <SubHeading>2. Qualification for the Advanced Category</SubHeading>
+        <p>After the initial group stage is completed:</p>
+        <BulletList>
+          <li>
+            The <Strong>top 2 teams from Group A</Strong> will automatically
+            qualify for the Advanced category.
+          </li>
+          <li>
+            The <Strong>top 2 teams from Group B</Strong> will automatically
+            qualify for the Advanced category.
+          </li>
+        </BulletList>
+        <Highlight>
+          <strong className="font-semibold">
+            4 teams automatically qualify for Advanced
+          </strong>
+          <br />
+          Top 2 from Group A + Top 2 from Group B
+        </Highlight>
+
+        <SubHeading>3. Determining the 5th Advanced Team</SubHeading>
+        <p>
+          The <Strong>3rd-place team from Group A</Strong> and the{" "}
+          <Strong>3rd- and 4th-place teams from Group B</Strong> will be
+          combined into a three-team pool.
+        </p>
+        <p>
+          These three teams will be{" "}
+          <Strong>
+            stack ranked based on number of wins and point differential
+          </Strong>{" "}
+          from the initial league round.
+        </p>
+        <Highlight>
+          <strong className="font-semibold">
+            The #1 ranked team among these three teams will automatically
+            qualify as the 5th Advanced team.
+          </strong>
+        </Highlight>
+
+        <SubHeading>4. Determining the 6th Advanced Team</SubHeading>
+        <p>
+          The remaining two teams will compete for the final spot in the
+          Advanced category.
+        </p>
+        <p>
+          <Strong>
+            If the two teams played each other during the initial league round:
+          </Strong>
+          <br />
+          The team that is ahead in the overall ranking will qualify as the{" "}
+          <Strong>6th Advanced team</Strong>.
+        </p>
+        <p>
+          <Strong>
+            If the two teams did not play each other during the initial league
+            round:
+          </Strong>
+          <br />
+          They will play a single{" "}
+          <Strong>rally-scoring game to 11 points</Strong> to determine the
+          final Advanced qualifier. See{" "}
+          <Strong>Game &amp; Scoring → Rally scoring to 11</Strong> for the
+          complete scoring format.
+        </p>
+        <p>
+          The winner of this game will qualify as the{" "}
+          <Strong>6th Advanced team</Strong>.
+        </p>
+
+        <SubHeading>5. Advanced Category</SubHeading>
+        <p>
+          The 6 teams qualifying for the Advanced category will form a new
+          group. All 6 teams will play a round-robin, with each team playing
+          every other team in the group.
+        </p>
+        <BulletList>
+          <li>
+            Each team will play <Strong>5 matches</Strong>.
+          </li>
+          <li>
+            There will be <Strong>15 total matches</Strong>.
+          </li>
+          <li>
+            The top 2 teams will advance to the <Strong>Advanced Final</Strong>.
+          </li>
+        </BulletList>
+        <Highlight>
+          <strong className="font-semibold">🏆 Advanced Final</strong>
+          <br />
+          The #1 and #2 ranked teams will compete for the Advanced Championship.
+        </Highlight>
+
+        <SubHeading>6. Intermediate Category</SubHeading>
+        <p>
+          The remaining 5 teams will form the Intermediate category. All 5 teams
+          will play a round-robin, with each team playing every other team in
+          the group.
+        </p>
+        <BulletList>
+          <li>
+            Each team will play <Strong>4 matches</Strong>.
+          </li>
+          <li>
+            There will be <Strong>10 total matches</Strong>.
+          </li>
+          <li>
+            The top 2 teams will advance to the{" "}
+            <Strong>Intermediate Final</Strong>.
+          </li>
+        </BulletList>
+        <Highlight>
+          <strong className="font-semibold">🏆 Intermediate Final</strong>
+          <br />
+          The #1 and #2 ranked teams will compete for the Intermediate
+          Championship.
+        </Highlight>
+
+        <SubHeading>Tournament Flow</SubHeading>
+        <Highlight>
+          <div className="text-center font-semibold">
+            {TOURNAMENT_FLOW.map((step, index) => (
+              <div key={step}>
+                {index > 0 && <div className="font-normal text-muted">↓</div>}
+                {step.split(" / ").map((line) => (
+                  <div key={line}>{line}</div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </Highlight>
+
+        <Highlight>
+          <strong className="font-semibold">Note:</strong> This format rewards
+          performance during the initial league round while giving teams that
+          narrowly miss automatic qualification an opportunity to compete for
+          the final Advanced spot.
+        </Highlight>
+      </SectionCard>
+
+      <SectionCard title="Game & Scoring Rules">
+        <SubHeading>Rally Scoring to 21</SubHeading>
+        <p>
+          All games will be played using <Strong>rally scoring</Strong>.
+        </p>
+        <BulletList>
+          <li>
+            Games will be played to <Strong>21 points</Strong>.
+          </li>
+          <li>
+            Teams will{" "}
+            <Strong>change sides when a team reaches 11 points</Strong>.
+          </li>
+          <li>
+            The team leading at <Strong>20 points will freeze at 20</Strong>.
+          </li>
+          <li>
+            From 20–20, play will continue until either:
+            <ul className="mt-1.5 list-[circle] space-y-1.5 pl-5">
+              <li>
+                A team wins by <Strong>2 points</Strong>, or
+              </li>
+              <li>
+                A team reaches <Strong>23 points</Strong>.
+              </li>
+            </ul>
+          </li>
+          <li>
+            The first team to reach the applicable winning score will win the
+            game.
+          </li>
+        </BulletList>
+
+        <SubHeading>Group Standings &amp; Tie-Breakers</SubHeading>
+        <p>Group rankings will be determined in the following order:</p>
+        <ol className="list-decimal space-y-1.5 pl-5">
+          <li>
+            <Strong>Wins</Strong> — teams are ranked by number of games won.
+          </li>
+          <li>
+            <Strong>Point Differential (PD)</Strong> — if teams are tied on
+            wins, the next tie-breaker is point differential:{" "}
+            <Strong>total points scored − total points conceded</Strong>.
+          </li>
+          <li>
+            <Strong>Head-to-Head Game Result</Strong> — if the teams are still
+            tied and have played each other, the head-to-head result is used.
+          </li>
+          <li>
+            <Strong>11-Point Tie-Breaker Game</Strong> — if the tie is still
+            unresolved and the result is consequential to advancement or
+            placement, the tied teams play a single rally-scoring tie-breaker
+            game using the <Strong>11-point format</Strong> below.
+          </li>
+        </ol>
+        <Highlight>
+          <strong className="font-semibold">
+            When is a tie-breaker game required?
+          </strong>
+          <br />A tie-breaker game is used only when the tied positions are
+          consequential — meaning the tie changes which category a team advances
+          to, whether a team reaches a championship path, or another meaningful
+          tournament placement.
+        </Highlight>
+        <p>
+          For the initial group stage, this means a tie-breaker game is required
+          when it affects the{" "}
+          <Strong>2nd/3rd positions in Group A or Group B</Strong>, or the{" "}
+          <Strong>
+            3rd/4th positions in Group B and 4th/5th positions in Group B
+          </Strong>
+          . A tie between <Strong>1st and 2nd</Strong>, for example, does not
+          require a tie-breaker game if both positions lead to the same outcome.
+        </p>
+
+        <SubHeading>Rally scoring to 11</SubHeading>
+        <p>
+          When an 11-point tie-breaker game is required, it will use the
+          following format:
+        </p>
+        <BulletList>
+          <li>
+            The game will use <Strong>rally scoring</Strong>.
+          </li>
+          <li>
+            The game is played to <Strong>11 points</Strong>.
+          </li>
+          <li>
+            Teams will{" "}
+            <Strong>change sides when a team reaches 6 points</Strong>.
+          </li>
+          <li>
+            The team leading at <Strong>10 points will freeze at 10</Strong>.
+          </li>
+          <li>
+            At <Strong>10–10</Strong>, play continues until a team either wins
+            by <Strong>2 points</Strong> or reaches <Strong>13 points</Strong>.
+          </li>
+          <li>
+            The first team to reach the applicable winning score wins the
+            tie-breaker.
+          </li>
+        </BulletList>
+
+        <SubHeading>Please Help Us Keep the Tournament Moving</SubHeading>
+        <p>
+          We have a <Strong>tight schedule</Strong> and need to complete a total
+          of <Strong>47 games</Strong> to conclude the tournament. Keeping the
+          tournament on schedule will require everyone&apos;s cooperation.
+        </p>
+        <p>Please help us minimize downtime between games:</p>
+        <BulletList>
+          <li>Be ready to play when your court is called.</li>
+          <li>Move to your assigned court promptly.</li>
+          <li>Keep warm-ups and between-game discussions brief.</li>
+          <li>Avoid unnecessary delays between points and games.</li>
+          <li>
+            Have your team ready before the previous game on your court
+            finishes.
+          </li>
+        </BulletList>
+        <Highlight>
+          <strong className="font-semibold">Every minute counts.</strong>
+          <br />
+          The faster we can get teams onto the court and ready to play, the more
+          smoothly the tournament will run and the better experience we can
+          provide for everyone.
+        </Highlight>
+        <p>
+          We appreciate everyone&apos;s cooperation in helping us keep the games
+          moving and finish the tournament on time.
+        </p>
+      </SectionCard>
 
       <SectionCard title="Rules & Guidance">
         <p>
@@ -231,7 +509,10 @@ export function CompetitiveTournamentTabs() {
         </p>
 
         <SubHeading>Choose Your Own Partner</SubHeading>
-        <p>Players choose their own partner and register as a doubles pair.</p>
+        <p>
+          Players register as a doubles pair. The initial group stage determines
+          whether a pair advances to the Advanced or Intermediate category.
+        </p>
 
         <Highlight>
           <strong className="font-semibold">Looking for a Partner?</strong>
@@ -243,30 +524,41 @@ export function CompetitiveTournamentTabs() {
 
         <SubHeading>Competitive Group Play</SubHeading>
         <p>
-          Depending on the number of registrations, pairs may be divided into
-          groups with round-robin play within each group. Not every pair will
-          necessarily play every other pair in the category. Based on
-          group-stage results, the top-performing pairs will advance to the
-          playoffs and compete for the championship.
+          Pairs will compete in the initial group stage, and their results will
+          determine their path to the Advanced or Intermediate category.
         </p>
 
-        <SubHeading>Finalizing Categories</SubHeading>
+        <SubHeading>Paddle Rules</SubHeading>
         <p>
-          Once registration closes, we will publish the registered pairs in each
-          category and open a brief window for participants to finalize their
-          preferred category. This will allow everyone to{" "}
-          <strong className="font-semibold text-ink">
-            review the matchups
-          </strong>{" "}
-          and choose the level of competition in which they would most like to
-          participate.
+          To keep things simple and fair, the following paddle guidelines will
+          apply:
         </p>
-
+        <BulletList>
+          <li>
+            If you are using the same paddle you used in the previous
+            tournament, you may continue using it.
+          </li>
+          <li>
+            A <Strong>USA Pickleball-approved paddle</Strong>, or a
+            clone/equivalent version of an approved paddle, is allowed.
+          </li>
+          <li>
+            <Strong>MOD paddles are not allowed</Strong>, as they have been
+            categorically banned by <Strong>USPA</Strong>.
+          </li>
+          <li>
+            <Strong>
+              Core-crushed or intentionally altered paddles are not allowed.
+            </Strong>
+          </li>
+        </BulletList>
         <Highlight>
-          <strong className="font-semibold">Important:</strong> The final
-          tournament format — including pools, brackets, round-robin structure,
-          and playoff qualification — will be determined after registration
-          closes and will depend on the number of entries in each category.
+          This is a friendly tournament and should be played in good spirits.
+          Everyone is expected to adhere to these paddle rules. Organizers will
+          not be checking or approving paddles before the tournament;{" "}
+          <strong className="font-semibold">
+            the paddle rules will be followed on an honor system.
+          </strong>
         </Highlight>
 
         <Highlight>
@@ -279,115 +571,113 @@ export function CompetitiveTournamentTabs() {
 
       <SectionCard title="Registration Fees">
         <p>
-          The registration fee is{" "}
-          <strong className="font-semibold text-ink">$40 per player</strong>.
+          Registration is <Strong>$40 per player</Strong>.
         </p>
         <p>
-          This approach ensures that tournament expenses, including{" "}
-          <strong className="font-semibold text-ink">
+          The registration fee helps cover{" "}
+          <Strong>
             court reservations, balls, prizes, and other event costs
-          </strong>
-          , are shared fairly among participants.
+          </Strong>
+          .
         </p>
       </SectionCard>
     </div>
   );
 }
 
-function PairList({ pairs }: { pairs: RegistrationPair[] }) {
-  if (pairs.length === 0) {
-    return (
-      <p className="mt-4 rounded-2xl bg-court-soft/40 px-4 py-3 text-sm text-muted">
-        No pairs registered yet.
-      </p>
-    );
-  }
-
-  return (
-    <ul className="mt-4 divide-y divide-outline/70">
-      {pairs.map((pair, index) => (
-        <li
-          key={`${pair.name}-${pair.partner}-${index}`}
-          className="py-2.5 text-[0.95rem] font-medium text-ink"
-        >
-          {index + 1}. {pair.name} &amp; {pair.partner}
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function DivisionCard({
-  title,
-  pairs,
-  loading,
-}: {
-  title: string;
-  pairs: RegistrationPair[] | null;
-  loading: boolean;
-}) {
-  return (
-    <div className="rounded-[24px] border border-outline/80 bg-white/80 p-5 sm:p-6">
-      <h3 className="font-display text-xl font-semibold tracking-tight text-ink">
-        {title}
-      </h3>
-      {!pairs ? (
-        <p className="mt-1 text-sm text-muted">
-          {loading ? "Loading…" : "Unable to load registrations."}
-        </p>
-      ) : (
-        <PairList pairs={pairs} />
-      )}
-    </div>
-  );
-}
-
-function PlayersSection() {
-  const [state, setState] = useState<RegistrationState>({ status: "loading" });
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadRegistrations() {
-      try {
-        const response = await fetch(SHEET_CSV_URL, { cache: "no-store" });
-        if (!response.ok) {
-          throw new Error("Unable to load registration sheet");
-        }
-        const registrations = parseRegistrations(await response.text());
-        if (!cancelled) {
-          setState({ status: "ready", ...registrations });
-        }
-      } catch (error) {
-        console.error(error);
-        if (!cancelled) {
-          setState({ status: "error" });
-        }
-      }
-    }
-
-    loadRegistrations();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const loading = state.status === "loading";
-  const ready = state.status === "ready";
-
+function FinalResultsSection() {
   return (
     <section className="surface-card rounded-[30px] px-5 py-7 sm:px-8 sm:py-8">
       <h2 className="font-display text-2xl leading-tight font-semibold tracking-tight text-ink sm:text-[1.7rem]">
-        Who&apos;s Playing
+        Champions &amp; Final Standings
       </h2>
 
-      <div className="mt-5">
-        <DivisionCard
-          title="Registered Pairs"
-          pairs={ready ? state.pairs : null}
-          loading={loading}
-        />
+      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+        {FINAL_RESULTS.map((result) => (
+          <div
+            key={result.category}
+            className="overflow-hidden rounded-[24px] border border-outline/80 bg-white/80"
+          >
+            <Image
+              src={result.image.src}
+              alt={result.image.alt}
+              width={1200}
+              height={1600}
+              sizes="(min-width: 640px) 44vw, 100vw"
+              className="aspect-[4/5] w-full object-cover object-top"
+            />
+            <div className="p-5 sm:p-6">
+              <span className="inline-flex rounded-full border border-court/15 bg-court-soft px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-court">
+                {result.category} Group
+              </span>
+              <h3 className="mt-3 font-display text-xl font-semibold tracking-tight text-ink">
+                🏆 {result.standings[0].pair}
+              </h3>
+              <ol className="mt-4 divide-y divide-outline/70">
+                {result.standings.map((standing, index) => (
+                  <li
+                    key={standing.pair}
+                    className="flex items-center justify-between gap-3 py-2.5 text-[0.95rem] font-medium text-ink"
+                  >
+                    <span>
+                      {index + 1}. {standing.pair}
+                    </span>
+                    {standing.medal ? (
+                      <span className="text-sm font-semibold text-court">
+                        {standing.medal === "Gold" ? "🥇" : "🥈"}{" "}
+                        {standing.medal}
+                      </span>
+                    ) : null}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function GroupingsSection() {
+  return (
+    <section className="surface-card rounded-[30px] px-5 py-7 sm:px-8 sm:py-8">
+      <h2 className="font-display text-2xl leading-tight font-semibold tracking-tight text-ink sm:text-[1.7rem]">
+        Groupings
+      </h2>
+      <p className="mt-4 text-[0.98rem] leading-7 text-muted">
+        <Strong>11 pairs</Strong> competed in the initial group stage. The groups
+        below are the opening-round groupings.
+      </p>
+      <p className="mt-2 text-sm leading-6 text-muted">
+        Substitutions: Aditya played in place of Kulwinder (with Rajesh), and
+        Piyush got injured and was replaced by Shivesh (with Arun).
+      </p>
+
+      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+        {GROUPS.map((group) => (
+          <div
+            key={group.name}
+            className="rounded-[24px] border border-outline/80 bg-white/80 p-5 sm:p-6"
+          >
+            <h3 className="font-display text-xl font-semibold tracking-tight text-ink">
+              {group.name}
+            </h3>
+            <p className="mt-1 text-sm text-muted">
+              {group.pairs.length} pairs · 4 matches per pair
+            </p>
+            <ul className="mt-4 divide-y divide-outline/70">
+              {group.pairs.map((pair, index) => (
+                <li
+                  key={pair}
+                  className="py-2.5 text-[0.95rem] font-medium text-ink"
+                >
+                  {index + 1}. {pair}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </div>
 
       <div className="mt-5 rounded-[24px] border border-outline/80 bg-court-soft/30 p-5 sm:p-6">
@@ -395,31 +685,9 @@ function PlayersSection() {
           Looking for a Partner?
         </h3>
         <p className="mt-1 text-sm leading-6 text-muted">
-          Players who registered individually and are still looking for a
-          partner are listed here.
+          Players who are still looking for a partner can contact the organizers
+          for help finding a match.
         </p>
-        {loading ? (
-          <p className="mt-4 text-sm text-muted">Loading registrations…</p>
-        ) : ready ? (
-          state.individuals.length === 0 ? (
-            <p className="mt-4 text-sm text-muted">
-              No individual players currently looking for a partner.
-            </p>
-          ) : (
-            <ul className="mt-4 divide-y divide-outline/70">
-              {state.individuals.map((name, index) => (
-                <li
-                  key={`${name}-${index}`}
-                  className="py-2.5 text-[0.95rem] font-medium text-ink"
-                >
-                  {name}
-                </li>
-              ))}
-            </ul>
-          )
-        ) : (
-          <p className="mt-4 text-sm text-muted">Unable to load registrations.</p>
-        )}
       </div>
     </section>
   );
