@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ClerkProvider } from "@clerk/nextjs";
+import { ClerkWrapper } from "@/components/clerk-wrapper";
 import { Bricolage_Grotesque, Source_Sans_3 } from "next/font/google";
 
 import { SiteHeader } from "@/components/site-header";
@@ -37,14 +37,14 @@ export default function RootLayout({
       className={`${displayFont.variable} ${bodyFont.variable} h-full antialiased`}
     >
       <body className="min-h-full">
-        <ClerkProvider>
+        <ClerkWrapper>
           <div className="flex min-h-screen flex-col">
             <SiteHeader />
             <div className="mx-auto w-full max-w-4xl flex-1 px-4 pb-12 pt-5 sm:px-6">
               {children}
             </div>
           </div>
-        </ClerkProvider>
+        </ClerkWrapper>
       </body>
     </html>
   );
