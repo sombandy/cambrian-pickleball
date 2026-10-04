@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Sparkles } from "lucide-react";
+import { getLeaderboard } from "@/lib/rankings";
+import { Leaderboard } from "@/components/leaderboard";
 
 export const metadata: Metadata = {
   title: "The Cambrian Pickleball Rankings",
@@ -135,9 +136,33 @@ const faqs: Faq[] = [
   },
 ];
 
-export default function RankingsPage() {
+export default async function RankingsPage() {
+  const leaderboard = await getLeaderboard();
+
   return (
     <main className="pb-16">
+      {/* Live Leaderboard */}
+      {leaderboard ? (
+        <div className="mb-12">
+          <Leaderboard entries={leaderboard} />
+          <p className="mt-3 text-center text-[0.78rem] text-muted">
+            Rankings are re-computed after each tournament. Sorted by Confidence Score.
+          </p>
+        </div>
+      ) : (
+        <aside className="mb-10 flex gap-4 rounded-2xl border-l-4 border-court bg-court-soft/55 px-5 py-4">
+          <div>
+            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-court">
+              Leaderboard temporarily unavailable
+            </p>
+            <p className="mt-1.5 text-[0.98rem] leading-7 text-ink/90 sm:text-[1rem]">
+              The live leaderboard could not be loaded right now. Check back shortly — rankings
+              update automatically after every tournament.
+            </p>
+          </div>
+        </aside>
+      )}
+
       <article className="max-w-3xl">
         {/* Title block */}
         <header>
@@ -164,21 +189,6 @@ export default function RankingsPage() {
             </div>
           </div>
         </header>
-
-        {/* Coming-soon inline notice */}
-        <aside className="mt-8 flex gap-4 rounded-2xl border-l-4 border-court bg-court-soft/55 px-5 py-4">
-          <Sparkles className="mt-1 h-5 w-5 flex-none text-court" />
-          <div>
-            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-court">
-              Live leaderboard — coming soon
-            </p>
-            <p className="mt-1.5 text-[0.98rem] leading-7 text-ink/90 sm:text-[1rem]">
-              The full interactive leaderboard is on its way. You&apos;ll soon be able to view
-              every player&apos;s DUPR, Confidence Rating, match history, and rating
-              progression here — updated automatically after every tournament.
-            </p>
-          </div>
-        </aside>
 
         {/* Body */}
         <div className="prose-blog mt-10">
