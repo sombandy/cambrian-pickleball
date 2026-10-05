@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { RANKINGS_COOKIE, hasRankingsAccess } from "@/lib/rankings-access";
 
 const hasClerkKeys =
   !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
@@ -16,7 +17,23 @@ if (hasClerkKeys) {
   });
 }
 
+function needsRankingsPassword(pathname: string) {
+  const isRankings = pathname === "/rankings" || pathname.startsWith("/rankings/");
+  return isRankings && pathname !== "/rankings/unlock";
+}
+
 export default function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  if (
+    needsRankingsPassword(pathname) &&
+    !hasRankingsAccess(request.cookies.get(RANKINGS_COOKIE)?.value)
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/rankings/unlock";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+
   if (handler) return handler(request);
   return NextResponse.next();
 }
