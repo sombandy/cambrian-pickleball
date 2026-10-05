@@ -18,11 +18,13 @@ function getSingleValue(value: string | string[] | undefined) {
 
 export async function FeedbackBoard({
   heading,
+  intro,
   basePath,
   tournamentSlug = null,
   searchParams,
 }: {
   heading: string;
+  intro?: React.ReactNode;
   basePath: string;
   // Null shows the general feedback board.
   tournamentSlug?: string | null;
@@ -72,6 +74,8 @@ export async function FeedbackBoard({
           </div>
         )}
       </div>
+
+      {intro}
 
       <PostForm tournamentSlug={tournamentSlug} feedbackPath={basePath} />
 
