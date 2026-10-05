@@ -18,9 +18,8 @@ export const VENUE = {
   mapsHref: "https://www.google.com/maps/search/?api=1&query=Ace+Pickleball+Club+5502+Monterey+Rd+San+Jose",
 };
 
-// Add new sections (e.g. Format) here; the tab bar and overview pick them up.
+// Add new sections (e.g. Format) here; the tab bar picks them up.
 export const SECTIONS = [
-  { label: "Overview", href: TOURNAMENT_PATH, exact: true },
   { label: "Players", href: PLAYERS_PATH },
   { label: "Rules", href: RULES_PATH },
   { label: "Feedback", href: FEEDBACK_PATH },
