@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { getLeaderboard } from "@/lib/rankings";
 import { Leaderboard } from "@/components/leaderboard";
 
@@ -162,6 +163,23 @@ export default async function RankingsPage() {
           </div>
         </aside>
       )}
+
+      {/* Sub-page navigation */}
+      <nav className="mb-10 flex flex-wrap gap-2">
+        {[
+          { label: "Recent Changes", href: "/rankings/changelog" },
+          { label: "FAQ", href: "/rankings/faq" },
+          { label: "Algorithm", href: "/rankings/algorithm" },
+        ].map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className="soft-button rounded-full px-4 py-2 text-sm font-semibold transition hover:bg-court-soft/70"
+          >
+            {link.label}
+          </Link>
+        ))}
+      </nav>
 
       <article className="max-w-3xl">
         {/* Title block */}
