@@ -62,7 +62,7 @@ function PlayerRow({ entry }: { entry: LeaderboardEntry }) {
 }
 
 export function Leaderboard({ entries }: { entries: LeaderboardEntry[] }) {
-  const totalTournaments = Math.max(...entries.map((e) => e.tournaments));
+  const totalTournaments = Math.max(0, ...entries.map((e) => e.tournaments));
 
   return (
     <section className="surface-card overflow-hidden rounded-[30px]">

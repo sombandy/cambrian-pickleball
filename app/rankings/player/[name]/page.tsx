@@ -14,7 +14,7 @@ export default async function PlayerPage({
   params: Promise<{ name: string }>;
 }) {
   const { name } = await params;
-  const playerName = decodeURIComponent(name);
+  const playerName = safeDecode(name);
   const history = await getPlayerHistory(playerName);
 
   if (!history) {
@@ -136,6 +136,14 @@ export default async function PlayerPage({
       </div>
     </main>
   );
+}
+
+function safeDecode(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
 }
 
 function StatBox({ label, value }: { label: string; value: string }) {
