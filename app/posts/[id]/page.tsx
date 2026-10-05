@@ -10,6 +10,7 @@ import { UpvoteToggle } from "@/components/upvote-toggle";
 import { getViewerAuth } from "@/lib/auth";
 import { TOURNAMENT_FEEDBACK_PATH } from "@/lib/constants";
 import { getPostDetail } from "@/lib/data";
+import { getTournamentFeedbackPath } from "@/lib/tournaments";
 import {
   excerpt,
   formatRelativeTime,
@@ -53,12 +54,15 @@ export default async function PostDetailPage({
 
   const canEditPost = Boolean(viewer.userId && post.clerkId === viewer.userId);
   const canDeletePost = Boolean(viewer.userId && (viewer.isAdmin || post.clerkId === viewer.userId));
+  const feedbackPath = post.tournamentSlug
+    ? getTournamentFeedbackPath(post.tournamentSlug)
+    : TOURNAMENT_FEEDBACK_PATH;
 
   return (
     <main className="grid gap-5 pb-12">
       <section className="grid gap-5">
         <Link
-          href={TOURNAMENT_FEEDBACK_PATH}
+          href={feedbackPath}
           className="soft-button inline-flex w-fit items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -87,6 +91,7 @@ export default async function PostDetailPage({
                 editHref={`/posts/${post.id}/edit`}
                 canEdit={canEditPost}
                 canDelete={canDeletePost}
+                feedbackPath={feedbackPath}
               />
             ) : null}
           </div>

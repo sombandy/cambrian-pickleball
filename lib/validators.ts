@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { CATEGORIES, SORT_OPTIONS } from "@/lib/constants";
 import { sanitizeRichText } from "@/lib/sanitize";
+import { getTournament } from "@/lib/tournaments";
 import { stripHtml } from "@/lib/utils";
 
 const trimmedString = z.string().trim();
@@ -13,7 +14,7 @@ export const paginationSchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).default(12),
 });
 
-export const postPayloadSchema = z.object({
+const postFieldsSchema = z.object({
   title: trimmedString.min(10, "Title must be at least 10 characters.").max(120, "Title must be 120 characters or fewer."),
   body: z
     .string()
@@ -22,7 +23,18 @@ export const postPayloadSchema = z.object({
   category: z.enum(CATEGORIES),
 });
 
-export const postUpdateSchema = postPayloadSchema;
+export const postPayloadSchema = postFieldsSchema.extend({
+  tournamentSlug: z
+    .string()
+    .nullish()
+    .transform((value) => value ?? null)
+    .refine(
+      (value) => value === null || Boolean(getTournament(value)?.hasFeedbackBoard),
+      "Unknown tournament.",
+    ),
+});
+
+export const postUpdateSchema = postFieldsSchema;
 
 export const commentPayloadSchema = z.object({
   body: trimmedString.min(1, "Comment cannot be empty.").max(1000, "Comment must be 1000 characters or fewer."),
