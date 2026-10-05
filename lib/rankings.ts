@@ -49,28 +49,32 @@ export async function getLeaderboard(): Promise<LeaderboardEntry[] | null> {
 /* Player history — fetched from the cambriandupr API                 */
 /* ------------------------------------------------------------------ */
 
-export interface MatchRecord {
-  partner: string;
-  opponents: [string, string];
-  scoreFor: number;
-  scoreAgainst: number;
-  won: boolean;
-}
+const MatchRecordSchema = z.object({
+  partner: z.string(),
+  opponents: z.tuple([z.string(), z.string()]),
+  scoreFor: z.number(),
+  scoreAgainst: z.number(),
+  won: z.boolean(),
+});
 
-export interface TournamentSnapshot {
-  tournament: string;
-  date: string;
-  duprAfter: number;
-  confidenceAfter: number;
-  confidenceBefore: number;
-  confidenceDelta: number;
-  matches: MatchRecord[];
-}
+const TournamentSnapshotSchema = z.object({
+  tournament: z.string(),
+  date: z.string(),
+  duprAfter: z.number().optional(),
+  confidenceAfter: z.number(),
+  confidenceBefore: z.number().optional(),
+  confidenceDelta: z.number(),
+  matches: z.array(MatchRecordSchema),
+});
 
-export interface PlayerHistoryData {
-  entry: LeaderboardEntry;
-  snapshots: TournamentSnapshot[];
-}
+const PlayerHistorySchema = z.object({
+  entry: LeaderboardEntrySchema,
+  snapshots: z.array(TournamentSnapshotSchema),
+});
+
+export type MatchRecord = z.infer<typeof MatchRecordSchema>;
+export type TournamentSnapshot = z.infer<typeof TournamentSnapshotSchema>;
+export type PlayerHistoryData = z.infer<typeof PlayerHistorySchema>;
 
 export async function getPlayerHistory(
   playerName: string
@@ -89,8 +93,7 @@ export async function getPlayerHistory(
       next: { revalidate: 3600, tags: ["player-history"] },
     });
     if (!res.ok) return null;
-    const data = await res.json();
-    return data as PlayerHistoryData;
+    return PlayerHistorySchema.parse(await res.json());
   } catch {
     return null;
   }

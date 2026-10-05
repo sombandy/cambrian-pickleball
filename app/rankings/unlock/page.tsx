@@ -5,6 +5,7 @@ import {
   RANKINGS_COOKIE,
   isValidPassword,
   rankingsAccessToken,
+  safeRankingsPath,
 } from "@/lib/rankings-access";
 
 export const metadata: Metadata = {
@@ -15,10 +16,15 @@ export const metadata: Metadata = {
 async function unlock(formData: FormData) {
   "use server";
   const password = String(formData.get("password") ?? "");
+  const next = safeRankingsPath(String(formData.get("next") ?? ""));
   const token = rankingsAccessToken();
 
   if (!token || !isValidPassword(password)) {
-    redirect("/rankings/unlock?error=1");
+    // Slow down repeated guessing.
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const params = new URLSearchParams({ error: "1" });
+    if (next !== "/rankings") params.set("next", next);
+    redirect(`/rankings/unlock?${params}`);
   }
 
   (await cookies()).set(RANKINGS_COOKIE, token, {
@@ -28,15 +34,27 @@ async function unlock(formData: FormData) {
     path: "/",
     maxAge: 60 * 60 * 24 * 30,
   });
-  redirect("/rankings");
+  redirect(next);
 }
 
 export default async function UnlockPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; next?: string }>;
 }) {
-  const { error } = await searchParams;
+  const { error, next } = await searchParams;
+
+  if (!rankingsAccessToken()) {
+    console.error("RANKINGS_PASSWORD is not set; rankings pages are locked.");
+    return (
+      <main className="mx-auto flex min-h-[70vh] max-w-sm flex-col justify-center px-4">
+        <h1 className="text-2xl font-semibold">Rankings</h1>
+        <p className="mt-2 text-sm text-neutral-600">
+          Rankings are temporarily unavailable. Please check back later.
+        </p>
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto flex min-h-[70vh] max-w-sm flex-col justify-center px-4">
@@ -45,6 +63,7 @@ export default async function UnlockPage({
         Enter the password to view the rankings.
       </p>
       <form action={unlock} className="mt-6 flex flex-col gap-3">
+        <input type="hidden" name="next" value={safeRankingsPath(next)} />
         <input
           name="password"
           type="password"

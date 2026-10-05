@@ -27,3 +27,16 @@ export function hasRankingsAccess(cookieValue: string | undefined): boolean {
   if (!expected || !cookieValue) return false;
   return safeEqual(cookieValue, expected);
 }
+
+// Only allow redirecting back to a rankings page on this site (no open redirects).
+export function safeRankingsPath(next: string | undefined | null): string {
+  if (
+    !next ||
+    !/^\/rankings(\/|$)/.test(next) ||
+    next.includes("\\") ||
+    next.startsWith("/rankings/unlock")
+  ) {
+    return "/rankings";
+  }
+  return next;
+}
