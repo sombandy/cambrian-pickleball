@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
       page: pagination.page,
       limit: pagination.limit,
       viewerUserId: viewer.userId,
+      tournamentSlug: request.nextUrl.searchParams.get("tournament") || null,
     });
 
     return NextResponse.json({
@@ -50,6 +51,7 @@ export async function POST(request: NextRequest) {
       body: payload.body,
       category: payload.category,
       userId: viewer.userId,
+      tournamentSlug: payload.tournamentSlug,
     });
 
     return NextResponse.json({ post }, { status: 201 });

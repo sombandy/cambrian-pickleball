@@ -12,18 +12,25 @@ type PostOwnerActionsProps = {
   editHref: string;
   canEdit: boolean;
   canDelete: boolean;
+  feedbackPath?: string;
 };
 
-function getDeleteDestination() {
+function getDeleteDestination(feedbackPath: string) {
   const params = new URLSearchParams({
     sort: "newest",
     page: "1",
   });
 
-  return `${TOURNAMENT_FEEDBACK_PATH}?${params.toString()}`;
+  return `${feedbackPath}?${params.toString()}`;
 }
 
-export function PostOwnerActions({ postId, editHref, canEdit, canDelete }: PostOwnerActionsProps) {
+export function PostOwnerActions({
+  postId,
+  editHref,
+  canEdit,
+  canDelete,
+  feedbackPath = TOURNAMENT_FEEDBACK_PATH,
+}: PostOwnerActionsProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +59,7 @@ export function PostOwnerActions({ postId, editHref, canEdit, canDelete }: PostO
         return;
       }
 
-      router.replace(getDeleteDestination());
+      router.replace(getDeleteDestination(feedbackPath));
       router.refresh();
     });
   }

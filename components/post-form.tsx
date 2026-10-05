@@ -34,12 +34,17 @@ type PostFormProps = {
     body: string;
     category: Category;
   };
+  // Scopes a new post to a tournament's feedback board.
+  tournamentSlug?: string | null;
+  feedbackPath?: string;
 };
 
 export function PostForm({
   mode = "create",
   postId,
   initialValues,
+  tournamentSlug,
+  feedbackPath = TOURNAMENT_FEEDBACK_PATH,
 }: PostFormProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -65,7 +70,7 @@ export function PostForm({
       sort: "newest",
       page: "1",
     });
-    return `${TOURNAMENT_FEEDBACK_PATH}?${params.toString()}`;
+    return `${feedbackPath}?${params.toString()}`;
   }
 
   function validatePost(values: { title: string; body: string }) {
@@ -137,6 +142,7 @@ export function PostForm({
           title: nextValues.title,
           body: plainTextToHtml(nextValues.body),
           category: nextValues.category,
+          ...(mode === "create" && tournamentSlug ? { tournamentSlug } : {}),
         }),
       });
 
@@ -164,7 +170,7 @@ export function PostForm({
           ? getCreateDestination()
           : postId
             ? `/posts/${postId}`
-            : TOURNAMENT_FEEDBACK_PATH;
+            : feedbackPath;
 
       router.push(destination);
       router.refresh();
