@@ -9,6 +9,7 @@ export type PostSummary = {
   body: string;
   category: Category;
   clerkId: string | null;
+  tournamentSlug: string | null;
   authorName: string;
   createdAt: string;
   updatedAt: string;

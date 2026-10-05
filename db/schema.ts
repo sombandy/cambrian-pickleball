@@ -16,12 +16,15 @@ export const posts = pgTable(
     body: text("body").notNull(),
     category: text("category").notNull(),
     clerkId: text("clerk_id"),
+    // Null for the general tournament feedback board.
+    tournamentSlug: text("tournament_slug"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
     index("posts_created_at_idx").on(table.createdAt),
     index("posts_category_idx").on(table.category),
+    index("posts_tournament_slug_idx").on(table.tournamentSlug, table.createdAt),
   ],
 );
 

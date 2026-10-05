@@ -18,6 +18,7 @@ type PostRow = {
   body: string;
   category: Category;
   clerk_id: string | null;
+  tournament_slug: string | null;
   created_at: Date | string;
   updated_at: Date | string;
   upvote_count: number;
@@ -87,6 +88,7 @@ async function hydratePostRows(rows: PostRow[]): Promise<PostSummary[]> {
     body: row.body,
     category: row.category,
     clerkId: row.clerk_id,
+    tournamentSlug: row.tournament_slug,
     authorName: row.clerk_id
       ? nameMap.get(row.clerk_id) ?? "Former Player"
       : ANONYMOUS_AUTHOR_NAME,
@@ -178,11 +180,16 @@ export async function listPosts(options: {
   page: number;
   limit: number;
   viewerUserId: string | null;
+  // Null lists the general feedback board.
+  tournamentSlug: string | null;
 }) {
   const sql = db();
   const offset = (options.page - 1) * options.limit;
   const viewerId = options.viewerUserId ?? "__visitor__";
   const orderClause = getOrderClause(options.sort);
+  const tournamentFilter = options.tournamentSlug
+    ? sql`p.tournament_slug = ${options.tournamentSlug}`
+    : sql`p.tournament_slug IS NULL`;
 
   const rows = await sql<PostRow[]>`
     SELECT
@@ -191,6 +198,7 @@ export async function listPosts(options: {
       p.body,
       p.category,
       p.clerk_id,
+      p.tournament_slug,
       p.created_at,
       p.updated_at,
       COALESCE(upvote_totals.upvote_count, 0)::int AS upvote_count,
@@ -210,6 +218,7 @@ export async function listPosts(options: {
     LEFT JOIN upvotes AS viewer_vote
       ON viewer_vote.post_id = p.id
       AND viewer_vote.clerk_id = ${viewerId}
+    WHERE ${tournamentFilter}
     ORDER BY ${sql.unsafe(orderClause)}
     LIMIT ${options.limit}
     OFFSET ${offset}
@@ -217,7 +226,8 @@ export async function listPosts(options: {
 
   const [countRecord] = await sql<{ count: number }[]>`
     SELECT COUNT(*)::int AS count
-    FROM posts
+    FROM posts p
+    WHERE ${tournamentFilter}
   `;
 
   return {
@@ -237,6 +247,7 @@ export async function getPostDetail(postId: string, viewerUserId: string | null)
       p.body,
       p.category,
       p.clerk_id,
+      p.tournament_slug,
       p.created_at,
       p.updated_at,
       COALESCE(upvote_totals.upvote_count, 0)::int AS upvote_count,
@@ -311,16 +322,18 @@ export async function createPost(input: {
   body: string;
   category: Category;
   userId: string | null;
+  tournamentSlug: string | null;
 }) {
   const sql = db();
 
   const [post] = await sql<{ id: string }[]>`
-    INSERT INTO posts (title, body, category, clerk_id)
+    INSERT INTO posts (title, body, category, clerk_id, tournament_slug)
     VALUES (
       ${input.title},
       ${input.body},
       ${input.category},
-      ${input.userId}
+      ${input.userId},
+      ${input.tournamentSlug}
     )
     RETURNING id
   `;
@@ -468,6 +481,7 @@ export async function listRecentPostsForAdmin(limit = 18) {
       p.body,
       p.category,
       p.clerk_id,
+      p.tournament_slug,
       p.created_at,
       p.updated_at,
       COALESCE(upvote_totals.upvote_count, 0)::int AS upvote_count,

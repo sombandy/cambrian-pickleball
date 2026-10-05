@@ -28,10 +28,16 @@ export type Tournament = {
   upcomingTimeframe?: string;
   // Rendered by a dedicated static route instead of /tournament/[slug].
   customPage?: boolean;
+  // Accepts posts scoped to this tournament at <tournament path>/feedback.
+  hasFeedbackBoard?: boolean;
 };
 
 export function getTournamentPath(slug: string) {
   return `${TOURNAMENT_INDEX_PATH}/${slug}`;
+}
+
+export function getTournamentFeedbackPath(slug: string) {
+  return `${getTournamentPath(slug)}/feedback`;
 }
 
 const tournamentTenChampionImage: TournamentImage = {
@@ -49,6 +55,20 @@ const tournamentTenParticipantImage: TournamentImage = {
 };
 
 const tournaments: Tournament[] = [
+  {
+    slug: "12",
+    edition: 12,
+    title: "12th Cambrian Pickleball Tournament",
+    dateLabel: "Saturday, November 14, 2026 · Ace Pickleball Club",
+    summary:
+      "Our first indoor tournament: 30 players at Ace Pickleball Club in San Jose, playing with the Life Time ball.",
+    status: "upcoming",
+    statusLabel: "Upcoming",
+    organizers: "Prabhu, Shivesh and Som",
+    upcomingTimeframe: "November 14",
+    customPage: true,
+    hasFeedbackBoard: true,
+  },
   {
     slug: "competitive-1",
     edition: 1,
