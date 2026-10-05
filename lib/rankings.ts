@@ -22,12 +22,19 @@ const LeaderboardEntrySchema = z.object({
 
 export type LeaderboardEntry = z.infer<typeof LeaderboardEntrySchema>;
 
+// The leaderboard API requires this key. It's read on the server only and never sent to the browser.
+function apiHeaders(): HeadersInit {
+  const key = process.env.LEADERBOARD_API_KEY;
+  return key ? { Authorization: `Bearer ${key}` } : {};
+}
+
 export async function getLeaderboard(): Promise<LeaderboardEntry[] | null> {
   const url = process.env.RANKINGS_API_URL;
   if (!url) return null;
 
   try {
     const res = await fetch(url, {
+      headers: apiHeaders(),
       next: { revalidate: 3600, tags: ["rankings"] },
     });
     if (!res.ok) return null;
@@ -78,6 +85,7 @@ export async function getPlayerHistory(
 
   try {
     const res = await fetch(playerUrl, {
+      headers: apiHeaders(),
       next: { revalidate: 3600, tags: ["player-history"] },
     });
     if (!res.ok) return null;
