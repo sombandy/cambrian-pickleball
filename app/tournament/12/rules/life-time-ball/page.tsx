@@ -49,11 +49,6 @@ const FAQ = [
       "It doesn't add to the change. It's likely to help with it: indoors, the LT ball is actually easier to control.",
   },
   {
-    question: "There's no official paddle. Why is there an official ball?",
-    answer:
-      "Your paddle is a personal choice: it only affects your own game, and you pick what suits you. The ball affects everyone on the court and how competitive the games are, so the organizers have to choose one. Every tournament has had an official ball; until now, it was the X-40.",
-  },
-  {
     question: "Why now? Why not wait until the spring tournament in February?",
     answer:
       "The current organizers can only set rules for this tournament. The next tournament's rules will be decided by its organizers.",
