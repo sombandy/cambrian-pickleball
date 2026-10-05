@@ -37,3 +37,53 @@ export async function getLeaderboard(): Promise<LeaderboardEntry[] | null> {
     return null;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Player history — fetched from the cambriandupr API                 */
+/* ------------------------------------------------------------------ */
+
+export interface MatchRecord {
+  partner: string;
+  opponents: [string, string];
+  scoreFor: number;
+  scoreAgainst: number;
+  won: boolean;
+}
+
+export interface TournamentSnapshot {
+  tournament: string;
+  date: string;
+  duprAfter: number;
+  confidenceAfter: number;
+  confidenceBefore: number;
+  confidenceDelta: number;
+  matches: MatchRecord[];
+}
+
+export interface PlayerHistoryData {
+  entry: LeaderboardEntry;
+  snapshots: TournamentSnapshot[];
+}
+
+export async function getPlayerHistory(
+  playerName: string
+): Promise<PlayerHistoryData | null> {
+  const baseUrl = process.env.RANKINGS_API_URL;
+  if (!baseUrl) return null;
+
+  // Derive the player API URL from the leaderboard URL
+  // e.g. https://cambriandupr.vercel.app/api/leaderboard -> https://cambriandupr.vercel.app/api/player/NAME
+  const apiBase = baseUrl.replace(/\/api\/leaderboard\/?$/, "");
+  const playerUrl = `${apiBase}/api/player/${encodeURIComponent(playerName)}`;
+
+  try {
+    const res = await fetch(playerUrl, {
+      next: { revalidate: 3600, tags: ["player-history"] },
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data as PlayerHistoryData;
+  } catch {
+    return null;
+  }
+}
