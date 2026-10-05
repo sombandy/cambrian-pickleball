@@ -1,14 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { clerkEnabled } from "@/lib/clerk-enabled";
 import { RANKINGS_COOKIE, hasRankingsAccess } from "@/lib/rankings-access";
-
-const hasClerkKeys =
-  !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
-  !!process.env.CLERK_SECRET_KEY;
 
 let handler: ((req: NextRequest) => any) | null = null;
 
-if (hasClerkKeys) {
+if (clerkEnabled) {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { clerkMiddleware } = require("@clerk/nextjs/server");
   handler = clerkMiddleware({
