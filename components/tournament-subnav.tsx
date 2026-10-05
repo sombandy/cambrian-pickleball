@@ -8,13 +8,10 @@ import { cn } from "@/lib/utils";
 export type TournamentSection = {
   label: string;
   href: string;
-  // Only active on an exact path match (used for the overview tab).
-  exact?: boolean;
 };
 
 function isActive(pathname: string | null, section: TournamentSection) {
   if (!pathname) return false;
-  if (section.exact) return pathname === section.href;
   return pathname === section.href || pathname.startsWith(`${section.href}/`);
 }
 

@@ -25,10 +25,7 @@ export default function TournamentTwelveRulesPage() {
   return (
     <div className="grid gap-5">
       <TournamentSectionCard title="Rules">
-        <p>
-          The full tournament rules and format will be posted here closer to the event. The
-          rules below are already set.
-        </p>
+        <p>The teams and the format of the tournament will be posted soon.</p>
 
         <ul className="grid gap-3">
           {RULE_PAGES.map(({ href, icon: Icon, title, description }) => (
