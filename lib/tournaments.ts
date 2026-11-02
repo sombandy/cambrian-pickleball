@@ -61,7 +61,7 @@ const tournaments: Tournament[] = [
     title: "12th Cambrian Pickleball Tournament",
     dateLabel: "Saturday, November 14, 2026 · Ace Pickleball Club",
     summary:
-      "Our first indoor tournament: 30 players at Ace Pickleball Club in San Jose, playing with the Life Time ball.",
+      "Our first indoor tournament: 30 players at Ace Pickleball Club in San Jose.",
     status: "upcoming",
     statusLabel: "Upcoming",
     organizers: "Prabhu, Shivesh and Som",
