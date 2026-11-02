@@ -5,7 +5,6 @@ export const TOURNAMENT_PATH = getTournamentPath(TOURNAMENT_SLUG);
 export const FEEDBACK_PATH = getTournamentFeedbackPath(TOURNAMENT_SLUG);
 export const PLAYERS_PATH = `${TOURNAMENT_PATH}/players`;
 export const RULES_PATH = `${TOURNAMENT_PATH}/rules`;
-export const LIFE_TIME_BALL_PATH = `${RULES_PATH}/life-time-ball`;
 
 export const TOURNAMENT_TITLE = "12th Cambrian Pickleball Tournament";
 export const ORGANIZERS = "Prabhu, Shivesh and Som";
@@ -29,6 +28,7 @@ export const PLAYERS = [
   "Abhinay",
   "Ankit Agarwal",
   "Arun V",
+  "Badhri Krishnamoorthy",
   "Balaji",
   "Basavaraj",
   "Bhanu Pamidi",
@@ -40,7 +40,6 @@ export const PLAYERS = [
   "Krishna Veturi",
   "Kulwinder",
   "Monish",
-  "Muthu Sada",
   "Naresh Ramaiya",
   "Nirav Shah",
   "Piyush",
@@ -58,4 +57,4 @@ export const PLAYERS = [
   "Venkata Ramanan",
 ];
 
-export const WAITLIST = ["Badhri Krishnamoorthy"];
+export const WAITLIST = ["Muthu Sada"];
