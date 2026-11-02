@@ -4,19 +4,18 @@ import { TournamentSectionCard } from "@/components/tournament-section-card";
 import { cn } from "@/lib/utils";
 
 import {
-  FINAL_SLOTS,
-  finalAppearance,
-  GROUP_FIXTURES,
-  GROUP_SLOTS,
+  FINISH_TIME,
+  GAMES,
+  gamesIn,
+  LEAGUE_SLOTS,
+  leagueFor,
   pairLabel,
-  PLAYOFF_FIXTURES,
+  PLAYOFF_ROUNDS,
   PLAYOFF_SLOTS,
-  playerLabel,
-  rotationAt,
-  ROTATION,
-  TEAMS,
-  type Fixture,
+  SLOTS,
+  type Pair,
   type Slot,
+  type Stage,
 } from "../schedule";
 import { GameFinder } from "./game-finder";
 
@@ -34,12 +33,32 @@ const ON_THIS_PAGE = [
   { href: "#venue", label: "Venue & check-in" },
 ];
 
+function stageSlots(stage: Stage) {
+  return SLOTS.filter((slot) => slot.stage === stage);
+}
+
+function stageGames(stage: Stage) {
+  return stageSlots(stage).flatMap(gamesIn).length;
+}
+
+const LEAGUE_GAMES = stageGames("League");
+const LEAGUE_GAMES_PER_PLAYER = leagueFor("A", 1).filter((entry) => entry.kind === "play").length;
+// Five-game playoff series: each player plays two games per round.
+const PLAYOFF_GAMES_PER_PLAYER = 2;
+
 const SUMMARY = [
   { label: "Teams", value: "6", detail: "5 players each" },
   { label: "Courts", value: "4", detail: "11 AM – 7 PM" },
-  { label: "Slot", value: "25 min", detail: "20 game + 5 changeover" },
-  { label: "Games", value: "66", detail: "36 groups + 30 playoffs" },
+  { label: "Slot", value: "18 min", detail: "game + changeover" },
+  {
+    label: "Games",
+    value: `${GAMES.length}`,
+    detail: `${LEAGUE_GAMES} league + ${GAMES.length - LEAGUE_GAMES} playoffs`,
+  },
 ];
+
+const FIRST_SEMIFINAL_SLOT = stageSlots("Semifinals")[0].number;
+const FIRST_FINAL_SLOT = stageSlots("Final")[0].number;
 
 function Strong({ children }: { children: React.ReactNode }) {
   return <strong className="font-semibold text-ink">{children}</strong>;
@@ -94,19 +113,13 @@ function Table({ head, rows }: { head: React.ReactNode[]; rows: Row[] }) {
   );
 }
 
-// Court cells and resting players for one slot, in court order.
-function courtCells(fixtures: Fixture[]) {
-  const cells: string[] = [];
-  const resting: string[] = [];
-  for (const { home, away } of [...fixtures].sort((a, b) => a.court - b.court)) {
-    const homeRot = rotationAt(home.appearance);
-    const awayRot = rotationAt(away.appearance);
-    homeRot.pairs.forEach((pair, idx) => {
-      cells.push(`${pairLabel(home.label, pair)} v ${pairLabel(away.label, awayRot.pairs[idx])}`);
-    });
-    resting.push(playerLabel(home.label, homeRot.rest), playerLabel(away.label, awayRot.rest));
-  }
-  return { cells, resting };
+// One cell per court, in court order; both sides use the same numbered pair.
+function courtCells(slot: Slot) {
+  const games = gamesIn(slot);
+  return [1, 2, 3, 4].map((court) => {
+    const game = games.find((g) => g.court === court);
+    return game ? `${pairLabel(game.home, game.pair)} v ${pairLabel(game.away, game.pair)}` : "Free";
+  });
 }
 
 // A slot's row, followed by a full-width "Break" row if a break comes after it.
@@ -117,47 +130,36 @@ function withBreak(slot: Slot, row: Row): Row[] {
   return [row, { key: `${slot.number}-break`, muted: true, cells: [...cells, ...padding] }];
 }
 
-function scheduleRows(
-  slots: Slot[],
-  fixtures: Fixture[],
-  lead: (slot: Slot) => React.ReactNode[],
-  trail: (slotFixtures: Fixture[]) => React.ReactNode[] = () => [],
-): Row[] {
-  return slots.flatMap((slot) => {
-    const slotFixtures = fixtures.filter((f) => f.slot === slot.number);
-    const { cells, resting } = courtCells(slotFixtures);
-    return withBreak(slot, {
-      key: `${slot.number}`,
-      cells: [...lead(slot), ...cells, resting.join(", "), ...trail(slotFixtures)],
-    });
-  });
-}
+const LEAGUE_ROWS = LEAGUE_SLOTS.flatMap((slot) =>
+  withBreak(slot, { key: `${slot.number}`, cells: [slot.number, slot.time, ...courtCells(slot)] }),
+);
 
-function idleTeams(slotFixtures: Fixture[]) {
-  const playing = new Set(slotFixtures.flatMap((f) => [f.home.label, f.away.label]));
-  return [TEAMS.filter((team) => !playing.has(team)).join(", ")];
-}
+const PLAYOFF_ROWS = PLAYOFF_SLOTS.flatMap((slot) =>
+  withBreak(slot, { key: `${slot.number}`, cells: [slot.number, slot.time, slot.stage, ...courtCells(slot)] }),
+);
 
-const GROUP_ROWS = scheduleRows(GROUP_SLOTS, GROUP_FIXTURES, (slot) => [slot.number, slot.time], idleTeams);
+const pairText = (pair: Pair) => pair.join("+");
 
-const PLAYOFF_ROWS = scheduleRows(PLAYOFF_SLOTS, PLAYOFF_FIXTURES, (slot) => [slot.number, slot.time, slot.stage]);
+// Matchups that use the same four partnerships, e.g. "A–F, B–E, C–D" → 1+2, 1+3, 2+5, 3+4.
+const MATCHUP_ROWS: Row[] = (() => {
+  const pairsByMatchup = new Map<string, string[]>();
+  for (const game of LEAGUE_SLOTS.flatMap(gamesIn)) {
+    const matchup = [game.home, game.away].sort().join("–");
+    pairsByMatchup.set(matchup, [...(pairsByMatchup.get(matchup) ?? []), pairText(game.pair)]);
+  }
+  const matchupsByPairs = new Map<string, string[]>();
+  for (const [matchup, pairs] of pairsByMatchup) {
+    const key = pairs.sort().join(", ");
+    matchupsByPairs.set(key, [...(matchupsByPairs.get(key) ?? []), matchup]);
+  }
+  return [...matchupsByPairs]
+    .map(([pairs, matchups]) => ({ key: pairs, cells: [matchups.sort().join(", "), pairs] }))
+    .sort((a, b) => String(a.cells[0]).localeCompare(String(b.cells[0])));
+})();
 
-const FINAL_ROWS = FINAL_SLOTS.flatMap((slot, k) => {
-  const rest = (seed: number) => {
-    const { pairs, rest } = rotationAt(finalAppearance(seed, k));
-    return `P${rest} (pairs ${pairs.map((pair) => pair.join("+")).join(", ")})`;
-  };
-  const court = k === 0 ? "Finalist X pair v Finalist Y pair" : "as above";
-  return withBreak(slot, { key: `${slot.number}`, cells: [slot.number, slot.time, court, court, rest(1), rest(3)] });
-});
-
-const ROTATION_ROWS = ROTATION.map(({ pairs, rest }, idx) => ({
-  key: `${idx}`,
-  cells: [
-    [idx + 1, idx + 6, idx + 11].join(", "),
-    ...pairs.map(([a, b]) => `P${a}+P${b}`),
-    `P${rest}`,
-  ],
+const PLAYOFF_PAIR_ROWS: Row[] = PLAYOFF_ROUNDS.map(({ stage, slots }) => ({
+  key: stage,
+  cells: [stage, slots.map(({ pairs }) => pairs.map(pairText).join(", ")).join(" · ")],
 }));
 
 export default function TournamentTwelveRulesPage() {
@@ -165,8 +167,9 @@ export default function TournamentTwelveRulesPage() {
     <div className="grid min-w-0 grid-cols-1 gap-5">
       <TournamentSectionCard eyebrow="Rules guide" title="How the tournament works">
         <p>
-          Six teams of five players, split into two groups of three. Each group plays a full league. Seeds 1–2
-          get semifinal byes, seeds 3–6 play wild cards, then two semifinals and a final.
+          Six teams of five players in one pool. Every team plays every other team, always with the same numbered
+          pair on both sides (A1+A2 v B1+B2). The top four teams play semifinals (Seed 1 v 4, Seed 2 v 3), then a
+          final. The last game ends at {FINISH_TIME} PM.
         </p>
 
         <ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
@@ -178,11 +181,6 @@ export default function TournamentTwelveRulesPage() {
             </li>
           ))}
         </ul>
-
-        <ToConfirm>
-          With a 5-minute break after every 50 minutes of play, the schedule ends at <Strong>7:10 PM</Strong>{" "}
-          (last game ends 7:05 PM), 10 minutes past the 7:00 PM reservation.
-        </ToConfirm>
 
         <nav aria-label="On this page" className="flex flex-wrap gap-2">
           {ON_THIS_PAGE.map(({ href, label }) => (
@@ -197,7 +195,7 @@ export default function TournamentTwelveRulesPage() {
         <TournamentSectionCard eyebrow="Your schedule" title="Find your games">
           <p>
             Pick your team and your player number to see every slot: which court you&apos;re on, who you&apos;re
-            partnered with, who you&apos;re playing, and when you rest.
+            partnered with, who you&apos;re playing, and when you sit out.
           </p>
           <GameFinder />
         </TournamentSectionCard>
@@ -207,80 +205,75 @@ export default function TournamentTwelveRulesPage() {
         <TournamentSectionCard eyebrow="Section 1" title="Format">
           <SubHeading>Format and timing</SubHeading>
           <BulletList>
-            <li>Courts: 4. Teams: 6 (Group 1: A, B, C. Group 2: D, E, F).</li>
+            <li>Courts: 4. Teams: 6, all in one pool. Every team plays all five other teams.</li>
             <li>
-              Teams are placed into Group 1 and Group 2 by <Strong>lucky draw</Strong>.
+              Each team has 5 players, labelled by team letter and number (Team A: A1, A2, A3, A4, A5). Player
+              numbers are fixed roster positions.
             </li>
             <li>
-              Each team has 5 players, labelled by team letter and number (Team A: A1, A2, A3, A4, A5). 4 play in
-              each slot (2 pairs, one per court) and 1 rests.
+              Every game matches the <Strong>same numbered pair</Strong> on both teams: A1+A2 v B1+B2, never A1+A2 v
+              B3+B4.
             </li>
-            <li>Each game: 20 minutes, followed by a 5-minute changeover (25-minute slot).</li>
             <li>
-              A 5-minute break is inserted whenever another slot would push continuous play past 60 minutes
-              (after every second slot).
+              League: <Strong>4 games against each opponent</Strong>, each with a different partnership. Every
+              player plays exactly {LEAGUE_GAMES_PER_PLAYER} league games and partners each teammate exactly twice.
             </li>
-            <li>A &ldquo;series&rdquo; is 6 games between two teams: 3 slots, 2 courts each.</li>
+            <li>
+              All six teams play in every league slot. A team can be on two courts at once against different
+              opponents, but never more than 4 of its players play at the same time.
+            </li>
+            <li>Each slot is 18 minutes, game and changeover included.</li>
+            <li>A 10-minute break comes after at most 60 minutes of play (after every third slot).</li>
+            <li>
+              Semifinals and the final are 5-game series: every player plays exactly {PLAYOFF_GAMES_PER_PLAYER} games
+              per round. All 5 games are played even if the series is already decided.
+            </li>
           </BulletList>
 
           <SubHeading>Stage summary</SubHeading>
           <Table
             head={["Stage", "Matchups", "Slots", "Games", "Courts"]}
             rows={[
-              { key: "groups", cells: ["Groups", "A–B, A–C, B–C, D–E, D–F, E–F", 9, 36, 4] },
-              { key: "wc", cells: ["Wild cards", "Seed 3 v 6, Seed 4 v 5", 3, 12, 4] },
-              { key: "semis", cells: ["Semifinals", "Seed 1 v WC winner, Seed 2 v WC winner", 3, 12, 4] },
-              { key: "final", cells: ["Final", "Semifinal winners", 3, 6, 2] },
-              { key: "total", cells: [<Strong key="t">Total</Strong>, "", <Strong key="s">18</Strong>, <Strong key="g">66</Strong>, ""] },
+              {
+                key: "league",
+                cells: ["League", "Every team v every other team, 4 games each", stageSlots("League").length, LEAGUE_GAMES, "4"],
+              },
+              {
+                key: "semis",
+                cells: ["Semifinals", "Seed 1 v 4, Seed 2 v 3", stageSlots("Semifinals").length, stageGames("Semifinals"), "4 (2 in last slot)"],
+              },
+              {
+                key: "final",
+                cells: ["Final", "Semifinal winners", stageSlots("Final").length, stageGames("Final"), "2 (1 in last slot)"],
+              },
+              {
+                key: "total",
+                cells: [<Strong key="t">Total</Strong>, "", <Strong key="s">{SLOTS.length}</Strong>, <Strong key="g">{GAMES.length}</Strong>, ""],
+              },
             ]}
           />
 
-          <SubHeading>Court-by-court schedule: Group stage</SubHeading>
-          <p>
-            Each cell shows the doubles pair on that court. Teams sharing a matchup split across two courts. The
-            Resting column lists the benched player of each playing team.
-          </p>
+          <SubHeading>Games per player</SubHeading>
           <Table
-            head={["#", "Time", "Court 1", "Court 2", "Court 3", "Court 4", "Resting players", "Teams idle"]}
-            rows={GROUP_ROWS}
+            head={["Team finishes", "Games for every player on the team"]}
+            rows={[
+              { key: "league", cells: ["5th or 6th (league only)", LEAGUE_GAMES_PER_PLAYER] },
+              { key: "semi", cells: ["Loses a semifinal", LEAGUE_GAMES_PER_PLAYER + PLAYOFF_GAMES_PER_PLAYER] },
+              { key: "final", cells: ["Reaches the final", LEAGUE_GAMES_PER_PLAYER + 2 * PLAYOFF_GAMES_PER_PLAYER] },
+            ]}
           />
+
+          <SubHeading>Court-by-court schedule: League</SubHeading>
+          <p>Each cell shows the two pairs on that court. Players who aren&apos;t listed in a slot sit out.</p>
+          <Table head={["#", "Time", "Court 1", "Court 2", "Court 3", "Court 4"]} rows={LEAGUE_ROWS} />
 
           <SubHeading>Court-by-court schedule: Playoffs</SubHeading>
           <p>
-            Playoff teams are not known until group play ends, so rows use seed labels: S3 = the Seed 3 team and
-            S3.1 = that team&apos;s player 1 (its players keep the numbers 1–5 from their team letter). Each team
-            continues its own 5-position rotation from where it left off. W = winner of Seed 4 v 5 and W&apos; =
-            winner of Seed 3 v 6.
+            Playoff teams are not known until the league ends, so rows use seed labels: S4 = the Seed 4 team and
+            S4.1 = that team&apos;s player 1 (players keep their numbers 1–5). W1 = winner of Semifinal 1 (Seed 1 v
+            4) and W2 = winner of Semifinal 2 (Seed 2 v 3).
           </p>
-          <Table
-            head={["#", "Time", "Stage", "Court 1", "Court 2", "Court 3", "Court 4", "Resting players"]}
-            rows={PLAYOFF_ROWS}
-          />
-          <ToConfirm>
-            In the semifinals, W (winner of Seed 4 v 5) plays Seed 1 and W&apos; (winner of Seed 3 v 6) plays
-            Seed 2. The exact pairing is still to be confirmed.
-          </ToConfirm>
-
-          <SubHeading>Court-by-court schedule: Final</SubHeading>
-          <p>
-            The final uses Courts 1–2 only (Courts 3–4 free). Both finalists continue their own rotation, so the
-            resting player depends on how each team reached the final:
-          </p>
-          <Table
-            head={["#", "Time", "Court 1", "Court 2", "Rest: seed 1/2 finalist", "Rest: wild-card finalist"]}
-            rows={FINAL_ROWS}
-          />
-          <p>
-            Each finalist&apos;s two pairs play one on Court 1 and one on Court 2; pairing against the opponent
-            follows the listed order (first pair v first pair, second pair v second pair).
-          </p>
-
-          <SubHeading>5-position rotation (same for every team)</SubHeading>
-          <Table head={["Team appearance", "Pair 1", "Pair 2", "Resting"]} rows={ROTATION_ROWS} />
-          <p>
-            Over any 5 appearances each player rests exactly once. After 15 appearances every player has played
-            exactly 12 games. The group stage (6 appearances per team) gives 4–5 games per player.
-          </p>
+          <Table head={["#", "Time", "Stage", "Court 1", "Court 2", "Court 3", "Court 4"]} rows={PLAYOFF_ROWS} />
 
           <SubHeading>Refereeing</SubHeading>
           <BulletList>
@@ -294,10 +287,13 @@ export default function TournamentTwelveRulesPage() {
             <li>
               Each team may make up to <Strong>2 changes</Strong> to its lineup (designated players P1–P5).
             </li>
-            <li>Option A: make both changes before the start of the playoffs (before the first wild-card game, slot 10).</li>
             <li>
-              Option B: make one change before the start of the playoffs (before slot 10) and one change before
-              the start of the final (before slot 16).
+              Option A: make both changes before the start of the playoffs (before the first semifinal game, slot{" "}
+              {FIRST_SEMIFINAL_SLOT}).
+            </li>
+            <li>
+              Option B: make one change before the start of the playoffs (before slot {FIRST_SEMIFINAL_SLOT}) and one
+              change before the start of the final (before slot {FIRST_FINAL_SLOT}).
             </li>
           </BulletList>
           <ToConfirm>Which position number (P1–P5) a replacement player takes in the rotation.</ToConfirm>
@@ -411,43 +407,41 @@ export default function TournamentTwelveRulesPage() {
 
       <section id="league" className="scroll-mt-6">
         <TournamentSectionCard eyebrow="Section 3" title="League matchups">
-          <SubHeading>Groups</SubHeading>
-          <BulletList>
-            <li>Group 1: Teams A, B, C</li>
-            <li>Group 2: Teams D, E, F</li>
-          </BulletList>
+          <SubHeading>One pool</SubHeading>
           <p>
-            Each team plays both group opponents in a 6-game series, 12 games per team. Fixtures are in the
-            court-by-court schedule above.
+            All six teams play in a single league. Each team plays every other team 4 times, so every team plays{" "}
+            {(LEAGUE_GAMES * 2) / 6} league games. Matchups in the same row use the same four partnerships,
+            and both teams always field the same numbered pair.
           </p>
+          <Table head={["Matchups", "Partner pairs (same on both teams)"]} rows={MATCHUP_ROWS} />
 
           <SubHeading>Playoffs</SubHeading>
           <BulletList>
-            <li>Wild cards: Seed 3 v 6, Seed 4 v 5 (6 games each).</li>
-            <li>Semifinals: Seed 1 and Seed 2 v wild-card winners (6 games each).</li>
-            <li>Final: semifinal winners (6 games, 2 courts).</li>
+            <li>Semifinal 1: Seed 1 v Seed 4 on Courts 1–2 (5 games).</li>
+            <li>Semifinal 2: Seed 2 v Seed 3 on Courts 3–4 (5 games).</li>
+            <li>Final: semifinal winners on Courts 1–2 (5 games).</li>
           </BulletList>
-
-          <SubHeading>Group standings</SubHeading>
           <p>
-            Teams are ranked within each group using the rules under &ldquo;Team rankings&rdquo;: total
-            win-points, then PD across all group games, then a dreambreaker.
+            Both semifinals use the same pairs, slot by slot. The final uses the other five partnerships, so a
+            finalist uses every partnership exactly once across the playoffs.
+          </p>
+          <Table head={["Stage", "Pairs by slot"]} rows={PLAYOFF_PAIR_ROWS} />
+
+          <SubHeading>League standings</SubHeading>
+          <p>
+            Teams are ranked across the whole league using the rules under &ldquo;Team rankings&rdquo;: total
+            win-points, then PD across all league games, then a dreambreaker. The top four become Seeds 1–4.
           </p>
 
           <SubHeading>Playoff series result</SubHeading>
           <p>
-            The same order applies to each playoff series (wild card, semifinal, final): the team with more
-            win-points over the 6 games advances; if level, PD across the series decides; if still level, a
-            dreambreaker decides.
+            The same order applies to each playoff series (semifinal, final): the team with more win-points over
+            the 5 games advances; if level, PD across the series decides; if still level, a dreambreaker decides.
           </p>
           <ToConfirm>
-            <Strong>Seeding.</Strong> How the six teams are seeded 1–6 across the two groups (for example, both
-            group winners as seeds 1–2, then second places as 3–4, then third places as 5–6). The wild-card and
-            semifinal pairings above depend on it.
-          </ToConfirm>
-          <ToConfirm>
-            <Strong>Playoff player rotation.</Strong> Whether playoff lineups continue each team&apos;s league
-            rotation (as shown in the schedule above) or follow a new fixed rule.
+            <Strong>Ranking.</Strong> The co-organizer&apos;s planner ranks teams by league games won and avoids
+            tiebreak games outside the schedule. The win-points system and dreambreaker above stay until the
+            organizers confirm.
           </ToConfirm>
         </TournamentSectionCard>
       </section>
