@@ -72,9 +72,9 @@ export const changelogEntries: ChangelogEntry[] = [
   },
   {
     date: "2026-10-04",
-    summary: "12th Cambrian Tournament data added (49 matches)",
+    summary: "Cambrian Competitive Tournament 1 data added (49 matches)",
     tournament: {
-      name: "12th Cambrian Tournament",
+      name: "Cambrian Competitive Tournament 1",
       location: "AVAC, San Jose",
       matches: 49,
       players: 22,
