@@ -1,5 +1,7 @@
 import { getTournamentFeedbackPath, getTournamentPath } from "@/lib/tournaments";
 
+import type { Team } from "./schedule";
+
 export const TOURNAMENT_SLUG = "12";
 export const TOURNAMENT_PATH = getTournamentPath(TOURNAMENT_SLUG);
 export const FEEDBACK_PATH = getTournamentFeedbackPath(TOURNAMENT_SLUG);
@@ -24,37 +26,16 @@ export const SECTIONS = [
   { label: "Feedback", href: FEEDBACK_PATH },
 ];
 
-export const PLAYERS = [
-  "Abhinay",
-  "Ankit Agarwal",
-  "Arun V",
-  "Badhri Krishnamoorthy",
-  "Balaji",
-  "Basavaraj",
-  "Bhanu Pamidi",
-  "Devang Bhagat",
-  "GT",
-  "Jaski Singh",
-  "Jaynesh Doshi",
-  "Kaushik Ram",
-  "Krishna Veturi",
-  "Kulwinder",
-  "Monish",
-  "Naresh Ramaiya",
-  "Nirav Shah",
-  "Piyush",
-  "Prabhu",
-  "Priyank Jain",
-  "Raja Rajendran",
-  "Rajan",
-  "Rajesh Radhakrishnan",
-  "Satish Mavuri",
-  "Sharan Jayadevaiah",
-  "Shivesh",
-  "Som",
-  "Srini",
-  "Suren Seshadri",
-  "Venkata Ramanan",
-];
+// Each team sorted alphabetically; position sets the player number (first name is A1, last is A5).
+export const TEAM_ROSTERS: Record<Team, string[]> = {
+  A: ["Kaushik Ram", "Naresh Ramaiya", "Nirav Shah", "Sharan Jayadevaiah", "Suren Seshadri"],
+  B: ["Devang Bhagat", "Jaynesh Doshi", "Kulwinder", "Som", "Srini"],
+  C: ["Ankit Agarwal", "Monish", "Piyush", "Rajan", "Satish Mavuri"],
+  D: ["Aditya", "Badhri Krishnamoorthy", "Bhanu Pamidi", "Raja Rajendran", "Rajesh Radhakrishnan"],
+  E: ["Arun V", "Basavaraj", "Priyank Jain", "Shivesh", "Venkata Ramanan"],
+  F: ["Abhinay", "Balaji", "Jaski Singh", "Krishna Veturi", "Prabhu"],
+};
 
-export const WAITLIST = ["Muthu Sada"];
+export const PLAYERS = Object.values(TEAM_ROSTERS).flat();
+
+export const WAITLIST: string[] = [];
