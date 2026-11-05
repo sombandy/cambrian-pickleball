@@ -13,6 +13,7 @@ import {
   PLAYOFF_ROUNDS,
   PLAYOFF_SLOTS,
   SLOTS,
+  SLOT_MINUTES,
   type Pair,
   type Slot,
   type Stage,
@@ -38,7 +39,7 @@ function stageSlots(stage: Stage) {
 }
 
 function stageGames(stage: Stage) {
-  return stageSlots(stage).flatMap(gamesIn).length;
+  return stageSlots(stage).flatMap((slot) => gamesIn(slot)).length;
 }
 
 const LEAGUE_GAMES = stageGames("League");
@@ -49,7 +50,7 @@ const PLAYOFF_GAMES_PER_PLAYER = 2;
 const SUMMARY = [
   { label: "Teams", value: "6", detail: "5 players each" },
   { label: "Courts", value: "4", detail: "11 AM – 7 PM" },
-  { label: "Slot", value: "18 min", detail: "game + changeover" },
+  { label: "Slot", value: `${SLOT_MINUTES} min`, detail: "game + changeover" },
   {
     label: "Games",
     value: `${GAMES.length}`,
@@ -130,10 +131,6 @@ function withBreak(slot: Slot, row: Row): Row[] {
   return [row, { key: `${slot.number}-break`, muted: true, cells: [...cells, ...padding] }];
 }
 
-const LEAGUE_ROWS = LEAGUE_SLOTS.flatMap((slot) =>
-  withBreak(slot, { key: `${slot.number}`, cells: [slot.number, slot.time, ...courtCells(slot)] }),
-);
-
 const PLAYOFF_ROWS = PLAYOFF_SLOTS.flatMap((slot) =>
   withBreak(slot, { key: `${slot.number}`, cells: [slot.number, slot.time, slot.stage, ...courtCells(slot)] }),
 );
@@ -143,7 +140,7 @@ const pairText = (pair: Pair) => pair.join("+");
 // Matchups that use the same four partnerships, e.g. "A–F, B–E, C–D" → 1+2, 1+3, 2+5, 3+4.
 const MATCHUP_ROWS: Row[] = (() => {
   const pairsByMatchup = new Map<string, string[]>();
-  for (const game of LEAGUE_SLOTS.flatMap(gamesIn)) {
+  for (const game of LEAGUE_SLOTS.flatMap((slot) => gamesIn(slot))) {
     const matchup = [game.home, game.away].sort().join("–");
     pairsByMatchup.set(matchup, [...(pairsByMatchup.get(matchup) ?? []), pairText(game.pair)]);
   }
@@ -162,6 +159,10 @@ const PLAYOFF_PAIR_ROWS: Row[] = PLAYOFF_ROUNDS.map(({ stage, slots }) => ({
   cells: [stage, slots.map(({ pairs }) => pairs.map(pairText).join(", ")).join(" · ")],
 }));
 
+const LEAGUE_ROWS = LEAGUE_SLOTS.flatMap((slot) =>
+  withBreak(slot, { key: `${slot.number}`, cells: [slot.number, slot.time, ...courtCells(slot)] }),
+);
+
 export default function TournamentTwelveRulesPage() {
   return (
     <div className="grid min-w-0 grid-cols-1 gap-5">
@@ -169,7 +170,7 @@ export default function TournamentTwelveRulesPage() {
         <p>
           Six teams of five players in one pool. Every team plays every other team, always with the same numbered
           pair on both sides (A1+A2 v B1+B2). The top four teams play semifinals (Seed 1 v 4, Seed 2 v 3), then a
-          final. The last game ends at {FINISH_TIME} PM.
+          final. The final is scheduled to finish at {FINISH_TIME} PM.
         </p>
 
         <ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
@@ -222,8 +223,19 @@ export default function TournamentTwelveRulesPage() {
               All six teams play in every league slot. A team can be on two courts at once against different
               opponents, but never more than 4 of its players play at the same time.
             </li>
-            <li>Each slot is 18 minutes, game and changeover included.</li>
-            <li>A 10-minute break comes after at most 60 minutes of play (after every third slot).</li>
+            <li>Each slot is {SLOT_MINUTES} minutes, game and changeover included.</li>
+            <li>A 10-minute group break follows every third slot, except after the final.</li>
+            <li>
+              Nobody plays three league slots in a row. Players who are not listed in a slot rest.
+            </li>
+            <li>
+              Games use assigned courts. If a game runs long, wait for the organizer&apos;s call before starting
+              the next slot; a player cannot be called onto two courts at once.
+            </li>
+            <li>
+              The schedule uses the full 11 AM–7 PM reservation. Overruns or extra tiebreak games require time
+              saved earlier in the day.
+            </li>
             <li>
               Semifinals and the final are 5-game series: every player plays exactly {PLAYOFF_GAMES_PER_PLAYER} games
               per round. All 5 games are played even if the series is already decided.
@@ -264,8 +276,11 @@ export default function TournamentTwelveRulesPage() {
           />
 
           <SubHeading>Court-by-court schedule: League</SubHeading>
-          <p>Each cell shows the two pairs on that court. Players who aren&apos;t listed in a slot sit out.</p>
-          <Table head={["#", "Time", "Court 1", "Court 2", "Court 3", "Court 4"]} rows={LEAGUE_ROWS} />
+          <p>
+            Each cell shows the two pairs on that court. Players who aren&apos;t listed in a slot sit out.
+            Times are estimates.
+          </p>
+          <Table head={["#", "Estimated time", "Court 1", "Court 2", "Court 3", "Court 4"]} rows={LEAGUE_ROWS} />
 
           <SubHeading>Court-by-court schedule: Playoffs</SubHeading>
           <p>
@@ -273,7 +288,7 @@ export default function TournamentTwelveRulesPage() {
             S4.1 = that team&apos;s player 1 (players keep their numbers 1–5). W1 = winner of Semifinal 1 (Seed 1 v
             4) and W2 = winner of Semifinal 2 (Seed 2 v 3).
           </p>
-          <Table head={["#", "Time", "Stage", "Court 1", "Court 2", "Court 3", "Court 4"]} rows={PLAYOFF_ROWS} />
+          <Table head={["#", "Estimated time", "Stage", "Court 1", "Court 2", "Court 3", "Court 4"]} rows={PLAYOFF_ROWS} />
 
           <SubHeading>Refereeing</SubHeading>
           <BulletList>

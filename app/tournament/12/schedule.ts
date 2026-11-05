@@ -24,28 +24,29 @@ export type Slot = {
 // "W1"/"W2" (semifinal winners) in the final.
 type Game = { slot: number; court: number; home: string; away: string; pair: Pair };
 
-const SLOT_MINUTES = 18;
+export const SLOT_MINUTES = 20;
 const BREAK_MINUTES = 10;
 const MAX_PLAY_MINUTES = 60;
 
 // League: 15 slots on 4 courts. Each team plays every other team 4 times,
 // each time with a different partnership, and every team plays in every slot.
+// Every player plays eight games and never three consecutive league slots.
 const LEAGUE: [Team, Team, Pair][][] = [
-  [["B", "E", [3, 4]], ["F", "D", [1, 3]], ["A", "C", [2, 3]], ["C", "F", [4, 5]]],
-  [["B", "E", [2, 5]], ["F", "D", [2, 5]], ["F", "B", [1, 4]], ["A", "C", [4, 5]]],
-  [["A", "E", [1, 4]], ["A", "D", [3, 5]], ["F", "B", [1, 5]], ["C", "F", [3, 4]]],
-  [["A", "E", [2, 5]], ["E", "C", [1, 4]], ["D", "B", [2, 3]], ["C", "F", [2, 3]]],
-  [["B", "E", [1, 2]], ["B", "C", [3, 5]], ["A", "D", [1, 4]], ["E", "F", [4, 5]]],
-  [["A", "B", [2, 3]], ["C", "F", [1, 2]], ["D", "E", [1, 2]], ["D", "E", [3, 4]]],
-  [["A", "F", [1, 2]], ["B", "C", [2, 5]], ["B", "C", [1, 4]], ["D", "E", [2, 3]]],
-  [["F", "B", [3, 5]], ["F", "B", [2, 4]], ["A", "C", [1, 5]], ["D", "E", [4, 5]]],
-  [["F", "D", [3, 5]], ["B", "C", [1, 3]], ["A", "D", [2, 4]], ["E", "F", [2, 4]]],
-  [["C", "D", [2, 5]], ["A", "E", [3, 5]], ["F", "D", [1, 4]], ["A", "B", [1, 2]]],
-  [["A", "F", [2, 5]], ["C", "D", [1, 3]], ["A", "E", [1, 3]], ["D", "B", [2, 4]]],
-  [["C", "D", [3, 4]], ["A", "D", [1, 5]], ["E", "F", [1, 5]], ["A", "B", [3, 4]]],
-  [["E", "C", [1, 5]], ["A", "C", [2, 4]], ["D", "B", [1, 5]], ["E", "F", [2, 3]]],
-  [["A", "F", [1, 3]], ["B", "E", [1, 3]], ["C", "D", [1, 2]], ["A", "B", [4, 5]]],
-  [["A", "F", [3, 4]], ["E", "C", [3, 5]], ["E", "C", [2, 4]], ["D", "B", [4, 5]]],
+  [["A", "E", [1, 4]], ["F", "B", [3, 5]], ["F", "D", [1, 4]], ["E", "C", [3, 5]]],
+  [["A", "D", [3, 5]], ["D", "E", [1, 2]], ["A", "F", [1, 2]], ["B", "C", [1, 4]]],
+  [["C", "F", [3, 4]], ["D", "E", [3, 4]], ["B", "C", [2, 5]], ["A", "B", [3, 4]]],
+  [["F", "B", [1, 5]], ["C", "F", [2, 3]], ["A", "D", [1, 5]], ["E", "C", [1, 5]]],
+  [["F", "B", [1, 4]], ["E", "C", [1, 4]], ["A", "B", [2, 3]], ["D", "E", [2, 3]]],
+  [["B", "E", [2, 5]], ["A", "D", [1, 4]], ["C", "D", [2, 5]], ["A", "F", [2, 5]]],
+  [["B", "E", [3, 4]], ["A", "C", [1, 5]], ["C", "D", [3, 4]], ["A", "F", [3, 4]]],
+  [["F", "D", [1, 3]], ["A", "C", [2, 3]], ["F", "D", [2, 5]], ["B", "E", [1, 2]]],
+  [["C", "F", [4, 5]], ["D", "E", [4, 5]], ["B", "E", [1, 3]], ["A", "B", [4, 5]]],
+  [["F", "B", [2, 4]], ["C", "D", [1, 3]], ["A", "F", [1, 3]], ["E", "C", [2, 4]]],
+  [["B", "C", [3, 5]], ["F", "D", [3, 5]], ["A", "D", [2, 4]], ["A", "E", [3, 5]]],
+  [["E", "F", [2, 4]], ["A", "B", [1, 2]], ["E", "F", [1, 5]], ["C", "D", [1, 2]]],
+  [["A", "C", [4, 5]], ["B", "C", [1, 3]], ["E", "F", [2, 3]], ["D", "B", [4, 5]]],
+  [["D", "B", [2, 3]], ["E", "F", [4, 5]], ["A", "E", [1, 3]], ["A", "C", [2, 4]]],
+  [["A", "E", [2, 5]], ["C", "F", [1, 2]], ["D", "B", [2, 4]], ["D", "B", [1, 5]]],
 ];
 
 // Semifinal 1 (Seed 1 v 4) on Courts 1–2, Semifinal 2 (Seed 2 v 3) on Courts 3–4.
@@ -63,11 +64,7 @@ const PLAYOFF_PAIRS: Record<(typeof PLAYOFF_STAGES)[number], Pair[][]> = {
 
 type Row = { stage: Stage; games: Omit<Game, "slot">[] };
 
-const ROWS: Row[] = [
-  ...LEAGUE.map((row): Row => ({
-    stage: "League",
-    games: row.map(([home, away, pair], idx) => ({ court: idx + 1, home, away, pair })),
-  })),
+const PLAYOFF_ROWS: Row[] = [
   ...PLAYOFF_PAIRS.Semifinals.map((pairs): Row => ({
     stage: "Semifinals",
     games: SEMIFINALS.flatMap(([home, away], idx) =>
@@ -89,11 +86,18 @@ function clock(minutes: number) {
 
 // A break goes in whenever another slot would push play past 60 minutes.
 function buildSchedule() {
+  const rows: Row[] = [
+    ...LEAGUE.map((row): Row => ({
+      stage: "League",
+      games: row.map(([home, away, pair], idx) => ({ court: idx + 1, home, away, pair })),
+    })),
+    ...PLAYOFF_ROWS,
+  ];
   const slots: Slot[] = [];
   const games: Game[] = [];
   let time = 0;
   let sinceBreak = 0;
-  ROWS.forEach((row, idx) => {
+  rows.forEach((row, idx) => {
     if (sinceBreak + SLOT_MINUTES > MAX_PLAY_MINUTES) {
       slots[idx - 1].breakAfter = `${clock(time)}–${clock(time + BREAK_MINUTES)}`;
       time += BREAK_MINUTES;
