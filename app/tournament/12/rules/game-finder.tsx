@@ -4,12 +4,11 @@ import { Fragment, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
-import { TEAM_ROSTERS } from "../content";
 import {
+  GAMES,
   leagueFor,
   PLAYOFF_ROUNDS,
   POSITIONS,
-  SLOT_MINUTES,
   TEAMS,
   type PlayerSlot,
   type Team,
@@ -104,19 +103,7 @@ function SlotRow({ entry, team, position }: { entry: PlayerSlot } & Player) {
         </>
       ) : (
         <td colSpan={2} className="py-2 pr-3 pl-2 sm:pr-4">
-          {entry.kind === "rest" ? (
-            <>
-              <span className="font-semibold text-clay">Rest</span>
-              <span className="hidden text-muted sm:inline">
-                {" "}
-                · your team is on {entry.courts.length === 1 ? "Court" : "Courts"} {entry.courts.join(" & ")}
-              </span>
-            </>
-          ) : (
-            <>
-              Off<span className="hidden sm:inline"> · your team isn&apos;t playing</span>
-            </>
-          )}
+          <span className="font-semibold text-clay">Rest</span>
         </td>
       )}
     </tr>
@@ -157,7 +144,6 @@ const PLAYOFF_NOTES: Record<string, string> = {
 
 // Each playoff slot as First court / Second court, with the chosen player's game highlighted.
 function PlayoffTable({ team, position }: Player) {
-  const you = `${team}${position}`;
   return (
     <div className="overflow-x-auto rounded-xl border border-outline/80 bg-white/60">
       <table className="w-full border-collapse text-left text-[0.85rem] sm:text-sm">
@@ -178,13 +164,11 @@ function PlayoffTable({ team, position }: Player) {
                 </td>
               </tr>
               {slots.map(({ slot, pairs }) => {
-                const playing = pairs.some((pair) => pair.includes(position));
                 return (
                   <Fragment key={slot.number}>
-                    <tr className={cn("border-t border-outline/60", playing && "bg-white")}>
+                    <tr className="border-t border-outline/60">
                       <td className="py-2 pr-2 pl-3 align-top whitespace-nowrap tabular-nums sm:pr-4 sm:pl-4">
-                        <span className={playing ? "font-semibold text-ink" : "text-muted"}>{slot.time}</span>
-                        {playing ? null : <span className="block text-xs font-semibold text-clay">{you} rests</span>}
+                        {slot.time}
                       </td>
                       {[0, 1].map((idx) => {
                         const pair = pairs[idx];
@@ -229,62 +213,14 @@ const TABS = [
 
 type Tab = (typeof TABS)[number]["id"];
 
-function PlayRestPattern({ entries, player }: { entries: PlayerSlot[]; player: string }) {
-  return (
-    <div className="grid gap-3 rounded-2xl border border-outline/80 bg-white/60 p-3 sm:p-4">
-      <div>
-        <h3 className="font-semibold text-ink">Your play &amp; rest pattern</h3>
-        <p className="text-xs leading-5 text-muted">League slots 1–15 · P = play · R = rest · P* = back-to-back</p>
-      </div>
-      <ol
-        aria-label={`${player}: play and rest by slot`}
-        className="grid grid-cols-[repeat(15,minmax(0,1fr))] gap-0.5 sm:gap-1.5"
-      >
-        {entries.map((entry, idx) => {
-          const previous = entries[idx - 1];
-          const playing = entry.kind === "play";
-          const repeat = playing && previous?.kind === "play" && !previous.slot.breakAfter;
-          return (
-            <li key={entry.slot.number}>
-              <span aria-hidden="true" className="block text-center text-[11px] tabular-nums text-muted">{entry.slot.number}</span>
-              <span
-                aria-hidden="true"
-                className={cn(
-                  "flex h-8 items-center justify-center rounded text-[11px] font-semibold sm:text-xs",
-                  repeat ? "bg-clay/20 text-ink ring-1 ring-inset ring-clay/50" : playing ? "bg-berry text-white" : "bg-court-soft text-muted",
-                )}
-              >
-                {repeat ? "P*" : playing ? "P" : "R"}
-              </span>
-              <span className="sr-only">
-                Slot {entry.slot.number}, {entry.slot.time}: {playing ? `play on Court ${entry.court}` : "rest"}.
-                {repeat ? " Consecutive game without a scheduled break." : ""}
-              </span>
-            </li>
-          );
-        })}
-      </ol>
-      <p className="text-xs leading-5 text-muted">
-        P* marks a consecutive appearance. A rest slot is a {SLOT_MINUTES}-minute planned window;
-        group breaks are listed in your schedule below.
-      </p>
-    </div>
-  );
-}
-
 export function GameFinder() {
   const [team, setTeam] = useState<Team>("A");
   const [position, setPosition] = useState<number>(1);
   const [tab, setTab] = useState<Tab>("league");
 
-  const you = `${team}${position}`;
   const league = leagueFor(team, position);
-  const games = league.filter((entry) => entry.kind === "play");
-  const rests = league.length - games.length;
-  const opponents = TEAMS.filter((other) => other !== team).map((other) => ({
-    team: other,
-    count: games.filter((entry) => entry.opponent === other).length,
-  }));
+  const gamesPerPlayer = league.filter((entry) => entry.kind === "play").length;
+  const gamesPerTeam = GAMES.filter((game) => game.home === team || game.away === team).length;
 
   return (
     <div className="grid gap-4">
@@ -319,35 +255,15 @@ export function GameFinder() {
       <div role="tabpanel" id={`game-finder-panel-${tab}`} aria-labelledby={`game-finder-tab-${tab}`} className="grid gap-3">
         {tab === "league" ? (
           <>
-            <div className="grid gap-1">
-              <p className="text-ink">
-                <span className="font-display text-xl font-semibold">{you}</span>
-                <span className="text-sm"> · {TEAM_ROSTERS[team][position - 1]}</span>
-                <span className="text-muted">
-                  {" "}
-                  plays <span className="font-semibold text-ink">{games.length} league games</span> and rests in{" "}
-                  {rests} {rests === 1 ? "slot" : "slots"}.
-                </span>
-              </p>
-              <p className="text-sm text-muted">
-                Games against each team:{" "}
-                {opponents.map(({ team: other, count }, idx) => (
-                  <Fragment key={other}>
-                    {idx > 0 ? " · " : null}
-                    <span className="whitespace-nowrap">
-                      <span className="font-semibold text-ink">{other}</span> ×{count}
-                    </span>
-                  </Fragment>
-                ))}
-              </p>
-            </div>
-            <PlayRestPattern entries={league} player={you} />
+            <p className="text-sm text-ink">
+              {gamesPerPlayer} games per player · {gamesPerTeam} games per team
+            </p>
             <LeagueTable entries={league} team={team} position={position} />
           </>
         ) : (
           <>
-            <p className="text-sm leading-6">
-              {you}&apos;s games are highlighted. P1–P5 are the players on the other team.
+            <p className="text-sm text-ink">
+              Each playoff round: 2 games per player · 5 games per team
             </p>
             <PlayoffTable team={team} position={position} />
           </>

@@ -194,10 +194,7 @@ export default function TournamentTwelveRulesPage() {
 
       <section id="my-games" className="scroll-mt-6">
         <TournamentSectionCard eyebrow="Your schedule" title="Find your games">
-          <p>
-            Pick your team and your player number to see every slot: which court you&apos;re on, who you&apos;re
-            partnered with, who you&apos;re playing, and when you sit out.
-          </p>
+          <p>Pick your team and your player number to see every slot</p>
           <GameFinder />
         </TournamentSectionCard>
       </section>
