@@ -31,28 +31,51 @@ export const SLOT_MINUTES = 20;
 const BREAK_MINUTES = 10;
 const MAX_PLAY_MINUTES = 60;
 
-// League: 15 slots on 4 courts. Each team plays every other team 4 times,
-// each time with a different partnership, and every team plays in every slot.
-// Every player plays eight games and never three consecutive league slots.
-// The fourth value is the Open Courts game lead: a participant who did not
-// play in the preceding planning group. Everyone leads twice, once in games
-// 1–30 and once in 31–60; all players are available to lead the opening group.
-const LEAGUE: [Team, Team, Pair, PlayerId][][] = [
-  [["A", "E", [1, 4], "E4"], ["F", "B", [3, 5], "F5"], ["F", "D", [1, 4], "D4"], ["E", "C", [3, 5], "E5"]],
-  [["A", "D", [3, 5], "D3"], ["D", "E", [1, 2], "D2"], ["A", "F", [1, 2], "A2"], ["B", "C", [1, 4], "B1"]],
-  [["C", "F", [3, 4], "F3"], ["D", "E", [3, 4], "E3"], ["B", "C", [2, 5], "B2"], ["A", "B", [3, 4], "A4"]],
-  [["F", "B", [1, 5], "F1"], ["C", "F", [2, 3], "F2"], ["A", "D", [1, 5], "D5"], ["E", "C", [1, 5], "E1"]],
-  [["F", "B", [1, 4], "F4"], ["E", "C", [1, 4], "C4"], ["A", "B", [2, 3], "B3"], ["D", "E", [2, 3], "E2"]],
-  [["B", "E", [2, 5], "B5"], ["A", "D", [1, 4], "A1"], ["C", "D", [2, 5], "C5"], ["A", "F", [2, 5], "A5"]],
-  [["B", "E", [3, 4], "B4"], ["A", "C", [1, 5], "C1"], ["C", "D", [3, 4], "C3"], ["A", "F", [3, 4], "A3"]],
-  [["F", "D", [1, 3], "D1"], ["A", "C", [2, 3], "C2"], ["F", "D", [2, 5], "F5"], ["B", "E", [1, 2], "B1"]],
-  [["C", "F", [4, 5], "C4"], ["D", "E", [4, 5], "E4"], ["B", "E", [1, 3], "B3"], ["A", "B", [4, 5], "A4"]],
-  [["F", "B", [2, 4], "F2"], ["C", "D", [1, 3], "D3"], ["A", "F", [1, 3], "F3"], ["E", "C", [2, 4], "C2"]],
-  [["B", "C", [3, 5], "B5"], ["F", "D", [3, 5], "D5"], ["A", "D", [2, 4], "D2"], ["A", "E", [3, 5], "A5"]],
-  [["E", "F", [2, 4], "F4"], ["A", "B", [1, 2], "A1"], ["E", "F", [1, 5], "E1"], ["C", "D", [1, 2], "C1"]],
-  [["A", "C", [4, 5], "C5"], ["B", "C", [1, 3], "C3"], ["E", "F", [2, 3], "E3"], ["D", "B", [4, 5], "D4"]],
-  [["D", "B", [2, 3], "B2"], ["E", "F", [4, 5], "E5"], ["A", "E", [1, 3], "A3"], ["A", "C", [2, 4], "A2"]],
-  [["A", "E", [2, 5], "E2"], ["C", "F", [1, 2], "F1"], ["D", "B", [2, 4], "B4"], ["D", "B", [1, 5], "D1"]],
+// Assigned Courts league: 15 slots on 4 courts. Each team plays every other
+// team 4 times, each time with a different partnership, and every team plays in
+// every slot. Every player plays eight games and never three consecutive slots.
+const LEAGUE: [Team, Team, Pair][][] = [
+  [["A", "E", [1, 4]], ["F", "B", [3, 5]], ["F", "D", [1, 4]], ["E", "C", [3, 5]]],
+  [["A", "D", [3, 5]], ["D", "E", [1, 2]], ["A", "F", [1, 2]], ["B", "C", [1, 4]]],
+  [["C", "F", [3, 4]], ["D", "E", [3, 4]], ["B", "C", [2, 5]], ["A", "B", [3, 4]]],
+  [["F", "B", [1, 5]], ["C", "F", [2, 3]], ["A", "D", [1, 5]], ["E", "C", [1, 5]]],
+  [["F", "B", [1, 4]], ["E", "C", [1, 4]], ["A", "B", [2, 3]], ["D", "E", [2, 3]]],
+  [["B", "E", [2, 5]], ["A", "D", [1, 4]], ["C", "D", [2, 5]], ["A", "F", [2, 5]]],
+  [["B", "E", [3, 4]], ["A", "C", [1, 5]], ["C", "D", [3, 4]], ["A", "F", [3, 4]]],
+  [["F", "D", [1, 3]], ["A", "C", [2, 3]], ["F", "D", [2, 5]], ["B", "E", [1, 2]]],
+  [["C", "F", [4, 5]], ["D", "E", [4, 5]], ["B", "E", [1, 3]], ["A", "B", [4, 5]]],
+  [["F", "B", [2, 4]], ["C", "D", [1, 3]], ["A", "F", [1, 3]], ["E", "C", [2, 4]]],
+  [["B", "C", [3, 5]], ["F", "D", [3, 5]], ["A", "D", [2, 4]], ["A", "E", [3, 5]]],
+  [["E", "F", [2, 4]], ["A", "B", [1, 2]], ["E", "F", [1, 5]], ["C", "D", [1, 2]]],
+  [["A", "C", [4, 5]], ["B", "C", [1, 3]], ["E", "F", [2, 3]], ["D", "B", [4, 5]]],
+  [["D", "B", [2, 3]], ["E", "F", [4, 5]], ["A", "E", [1, 3]], ["A", "C", [2, 4]]],
+  [["A", "E", [2, 5]], ["C", "F", [1, 2]], ["D", "B", [2, 4]], ["D", "B", [1, 5]]],
+];
+
+// Open Courts league: the same 60 fixtures in queue order, in planning batches
+// of four. No player appears twice in any five consecutive games, so when a
+// court frees up the next game's players are normally all off court. Adjacent
+// batches share only four players (the minimum: a five-player team appearing
+// three times across two batches must repeat someone), and those repeats sit in
+// the last two games of the next batch, so its first two games are always fully
+// rested. The fourth value is the game lead: a participant who did not play in
+// the preceding batch. Everyone leads twice, once in games 1–30 and once in 31–60.
+const OPEN_COURTS: [Team, Team, Pair, PlayerId][][] = [
+  [["D", "E", [2, 3], "D2"], ["A", "B", [2, 3], "A3"], ["D", "B", [1, 5], "B5"], ["C", "F", [2, 3], "C3"]],
+  [["E", "F", [4, 5], "F4"], ["A", "C", [4, 5], "A5"], ["D", "B", [2, 4], "B4"], ["A", "E", [1, 3], "A1"]],
+  [["F", "D", [1, 3], "F1"], ["B", "C", [1, 3], "C1"], ["A", "E", [2, 5], "E2"], ["F", "D", [2, 5], "F2"]],
+  [["B", "C", [2, 5], "C2"], ["A", "E", [1, 4], "E1"], ["F", "D", [1, 4], "D4"], ["B", "C", [1, 4], "C4"]],
+  [["A", "E", [3, 5], "E3"], ["F", "D", [3, 5], "D5"], ["B", "C", [3, 5], "B3"], ["A", "F", [1, 2], "A2"]],
+  [["B", "E", [1, 2], "B2"], ["C", "D", [1, 2], "D1"], ["A", "F", [3, 4], "A4"], ["B", "E", [3, 4], "E4"]],
+  [["C", "D", [3, 4], "D3"], ["A", "F", [2, 5], "F5"], ["B", "E", [2, 5], "E5"], ["C", "D", [2, 5], "C5"]],
+  [["A", "F", [1, 3], "F3"], ["B", "E", [1, 3], "B1"], ["C", "D", [1, 3], "C1"], ["E", "F", [2, 4], "F4"]],
+  [["A", "C", [2, 4], "C4"], ["D", "B", [4, 5], "D4"], ["E", "F", [1, 5], "E5"], ["A", "C", [1, 5], "C5"]],
+  [["D", "B", [2, 3], "B2"], ["E", "F", [2, 3], "F3"], ["A", "C", [2, 3], "A3"], ["F", "B", [1, 4], "B1"]],
+  [["A", "D", [1, 4], "D1"], ["E", "C", [1, 4], "E4"], ["F", "B", [3, 5], "B5"], ["A", "D", [3, 5], "A5"]],
+  [["E", "C", [3, 5], "E3"], ["F", "B", [2, 4], "B4"], ["A", "D", [2, 4], "D2"], ["E", "C", [2, 4], "C2"]],
+  [["F", "B", [1, 5], "F1"], ["A", "D", [1, 5], "A1"], ["E", "C", [1, 5], "E1"], ["A", "B", [3, 4], "B3"]],
+  [["C", "F", [3, 4], "C3"], ["D", "E", [3, 4], "D3"], ["A", "B", [1, 2], "A2"], ["C", "F", [1, 2], "F2"]],
+  [["D", "E", [1, 2], "E2"], ["A", "B", [4, 5], "A4"], ["C", "F", [4, 5], "F5"], ["D", "E", [4, 5], "D5"]],
 ];
 
 export type LeagueFixture = {
@@ -68,7 +91,7 @@ export type LeagueFixture = {
 // Published once, left to right through the league order. Filtering for a
 // player or skipping a blocked game must never renumber these IDs. Court and
 // start/end times belong to execution, not to the shared-queue fixture.
-export const LEAGUE_FIXTURES: LeagueFixture[] = LEAGUE.flat().map(([home, away, pair, lead], idx) => ({
+export const LEAGUE_FIXTURES: LeagueFixture[] = OPEN_COURTS.flat().map(([home, away, pair, lead], idx) => ({
   id: `L${String(idx + 1).padStart(2, "0")}`,
   stage: "League",
   priority: idx + 1,
@@ -158,7 +181,7 @@ export const PLAYOFF_SLOTS = SLOTS.filter((slot) => slot.stage !== "League");
 
 // Open Courts uses consecutive 20-minute planning groups without league breaks.
 // Index by published priority so filtering never changes a game's estimate.
-export const TENTATIVE_LEAGUE_STARTS = LEAGUE.flatMap((row, idx) =>
+export const TENTATIVE_LEAGUE_STARTS = OPEN_COURTS.flatMap((row, idx) =>
   row.map(() => ({
     batch: idx,
     minutes: idx * SLOT_MINUTES,
