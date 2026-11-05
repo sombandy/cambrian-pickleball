@@ -5,11 +5,19 @@ import { Fragment, useState } from "react";
 import { cn } from "@/lib/utils";
 
 import {
+  backToBackPlayersFor,
+  FINISH_TIME,
   GAMES,
+  LEAGUE_FIXTURES,
+  LEAGUE_SLOTS,
   leagueFor,
+  leagueFixturesFor,
   PLAYOFF_ROUNDS,
   POSITIONS,
   TEAMS,
+  TENTATIVE_LEAGUE_STARTS,
+  type Pair,
+  type PlayerId,
   type PlayerSlot,
   type Team,
 } from "../schedule";
@@ -143,7 +151,9 @@ const PLAYOFF_NOTES: Record<string, string> = {
 };
 
 // Each playoff slot as First court / Second court, with the chosen player's game highlighted.
-function PlayoffTable({ team, position }: Player) {
+function PlayoffTable({ team, position, openCourts }: Player & { openCourts: boolean }) {
+  const breakBefore = LEAGUE_SLOTS[LEAGUE_SLOTS.length - 1].breakAfter;
+
   return (
     <div className="overflow-x-auto rounded-xl border border-outline/80 bg-white/60">
       <table className="w-full border-collapse text-left text-[0.85rem] sm:text-sm">
@@ -155,6 +165,7 @@ function PlayoffTable({ team, position }: Player) {
           </tr>
         </thead>
         <tbody>
+          {!openCourts && breakBefore ? <BreakRow time={breakBefore} colSpan={3} /> : null}
           {PLAYOFF_ROUNDS.map(({ stage, slots }) => (
             <Fragment key={stage}>
               <tr className="border-t border-outline/60 bg-court-soft/30">
@@ -206,17 +217,178 @@ function PlayoffTable({ team, position }: Player) {
   );
 }
 
-const TABS = [
+const STAGE_TABS = [
   { id: "league", label: "League" },
   { id: "playoffs", label: "Playoffs" },
 ] as const;
 
-type Tab = (typeof TABS)[number]["id"];
+const FORMAT_TABS = [
+  { id: "assigned", label: "Assigned Courts" },
+  { id: "open", label: "Open Courts" },
+] as const;
+
+type Tab = (typeof STAGE_TABS)[number]["id"];
+type Format = (typeof FORMAT_TABS)[number]["id"];
+
+function FinderTabs<T extends string>({
+  id,
+  label,
+  tabs,
+  value,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  tabs: readonly { id: T; label: string }[];
+  value: T;
+  onChange: (value: T) => void;
+}) {
+  return (
+    <div role="tablist" aria-label={label} className="inline-flex w-full rounded-[18px] border border-outline/80 bg-white/70 p-1 sm:w-auto sm:justify-self-start">
+      {tabs.map((tab, idx) => (
+        <button
+          key={tab.id}
+          type="button"
+          role="tab"
+          id={`${id}-tab-${tab.id}`}
+          aria-selected={value === tab.id}
+          aria-controls={`${id}-panel-${tab.id}`}
+          tabIndex={value === tab.id ? 0 : -1}
+          onClick={() => onChange(tab.id)}
+          onKeyDown={(event) => {
+            const next = event.key === "ArrowRight" ? (idx + 1) % tabs.length
+              : event.key === "ArrowLeft" ? (idx + tabs.length - 1) % tabs.length
+                : event.key === "Home" ? 0
+                  : event.key === "End" ? tabs.length - 1 : null;
+            if (next === null) return;
+            event.preventDefault();
+            onChange(tabs[next].id);
+            document.getElementById(`${id}-tab-${tabs[next].id}`)?.focus();
+          }}
+          className={cn(
+            "flex-1 rounded-[14px] px-3 py-2 text-sm font-semibold whitespace-nowrap transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-berry sm:flex-none sm:px-4",
+            value === tab.id ? "primary-button" : "text-muted hover:text-ink",
+          )}
+        >
+          {tab.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function OpenLeaguePair({ team, pair, backToBack }: { team: Team; pair: Pair; backToBack: PlayerId[] }) {
+  return (
+    <span className="whitespace-nowrap">
+      {pair.map((position, idx) => {
+        const player = `${team}${position}` as PlayerId;
+        const consecutive = backToBack.includes(player);
+        return (
+          <Fragment key={player}>
+            {idx > 0 && "+"}
+            <span
+              title={consecutive ? `${player}: back-to-back in the tentative schedule` : undefined}
+            >
+              {player}
+              {consecutive && (
+                <>
+                  <sup aria-hidden="true" className="ml-px text-berry">*</sup>
+                  <span className="sr-only"> (back-to-back)</span>
+                </>
+              )}
+            </span>
+          </Fragment>
+        );
+      })}
+    </span>
+  );
+}
+
+function OpenLeagueTable({
+  team,
+  position,
+  myGamesOnly,
+  onFilterChange,
+}: Player & { myGamesOnly: boolean; onFilterChange: (value: boolean) => void }) {
+  const myFixtures = leagueFixturesFor(team, position);
+  const fixtures = myGamesOnly ? myFixtures : LEAGUE_FIXTURES;
+
+  return (
+    <>
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <h3 id="league-list-heading" className="font-semibold text-ink">
+          {myGamesOnly ? `My ${fixtures.length} league games` : "Highlighted games are yours"}
+        </h3>
+        <label className="flex cursor-pointer items-center gap-2 text-sm text-ink">
+          <input
+            type="checkbox"
+            checked={myGamesOnly}
+            onChange={(event) => onFilterChange(event.target.checked)}
+            className="h-4 w-4 accent-berry"
+          />
+          My games only
+        </label>
+      </div>
+      <div
+        key={`${team}${position}-${myGamesOnly}`}
+        role="region"
+        aria-labelledby="league-list-heading"
+        tabIndex={0}
+        className="max-h-[28rem] overflow-auto rounded-xl border border-outline/80 bg-white/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-berry"
+      >
+        <table className="w-full border-collapse text-left text-sm">
+          <caption className="sr-only">Open Courts league games in priority order</caption>
+          <thead className="sticky top-0 z-10 bg-court-soft">
+            <tr className={HEADER_ROW}>
+              <th scope="col" className="px-3 py-2">Game</th>
+              <th scope="col" className="px-2 py-2">Matchup</th>
+              <th scope="col" className="px-2 py-2">Tentative start</th>
+              <th scope="col" className="px-3 py-2">Lead</th>
+            </tr>
+          </thead>
+          <tbody>
+            {fixtures.map((game, idx) => {
+              const planned = TENTATIVE_LEAGUE_STARTS[game.priority - 1];
+              const mine = myFixtures.some((fixture) => fixture.id === game.id);
+              const backToBack = backToBackPlayersFor(game);
+              const newBatch = idx > 0 && planned.batch !== TENTATIVE_LEAGUE_STARTS[fixtures[idx - 1].priority - 1].batch;
+              return (
+                <tr
+                  key={game.id}
+                  className={cn(
+                    "text-ink",
+                    mine ? "bg-court-soft/60 font-semibold" : "bg-white",
+                    newBatch ? "border-t-2 border-outline-strong" : "border-t border-outline/60",
+                  )}
+                >
+                  <th scope="row" className="px-3 py-2">{game.priority}</th>
+                  <td className="px-2 py-2">
+                    <OpenLeaguePair team={game.home} pair={game.pair} backToBack={backToBack} />{" "}
+                    <span className="inline-block whitespace-nowrap">
+                      <span className="font-normal text-muted">vs </span>
+                      <OpenLeaguePair team={game.away} pair={game.pair} backToBack={backToBack} />
+                    </span>
+                  </td>
+                  <td className="px-2 py-2 whitespace-nowrap tabular-nums">{planned.label}</td>
+                  <td className="px-3 py-2">{game.lead}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <p className="text-xs text-muted">* Back-to-back player in the tentative schedule.</p>
+    </>
+  );
+}
 
 export function GameFinder() {
   const [team, setTeam] = useState<Team>("A");
   const [position, setPosition] = useState<number>(1);
   const [tab, setTab] = useState<Tab>("league");
+  const [format, setFormat] = useState<Format>("assigned");
+  const [myGamesOnly, setMyGamesOnly] = useState(false);
+  const openCourts = format === "open";
 
   const league = leagueFor(team, position);
   const gamesPerPlayer = league.filter((entry) => entry.kind === "play").length;
@@ -224,49 +396,59 @@ export function GameFinder() {
 
   return (
     <div className="grid gap-4">
-      <div className="grid gap-3 rounded-[24px] border border-outline/80 bg-white/70 p-4 sm:p-5">
-        <ChoiceRow label="Team" options={TEAMS} value={team} onChange={setTeam} />
-        <ChoiceRow label="Player" options={POSITIONS} value={position} onChange={setPosition} />
-      </div>
+      <FinderTabs id="game-format" label="Court format" tabs={FORMAT_TABS} value={format} onChange={setFormat} />
+      <div role="tabpanel" id={`game-format-panel-${format}`} aria-labelledby={`game-format-tab-${format}`} className="grid min-w-0 gap-4">
+        <div className="rounded-2xl border border-outline/80 bg-court-soft/30 px-4 py-3 text-sm leading-6">
+          {openCourts ? (
+            <>
+              <p><strong className="text-ink">Priority:</strong> lower ready game numbers go first.</p>
+              <p><strong className="text-ink">Lead:</strong> gather all four rested players and take an empty court.</p>
+            </>
+          ) : (
+            <p>Follow your assigned court on the organizer&apos;s slot call. Ten-minute breaks between blocks of three slots.</p>
+          )}
+        </div>
+        <div className="grid gap-3 rounded-[24px] border border-outline/80 bg-white/70 p-4 sm:p-5">
+          <ChoiceRow label="Team" options={TEAMS} value={team} onChange={setTeam} />
+          <ChoiceRow label="Player" options={POSITIONS} value={position} onChange={setPosition} />
+        </div>
 
-      <div role="tablist" aria-label="Stage" className="inline-flex w-full rounded-[18px] border border-outline/80 bg-white/70 p-1 sm:w-auto sm:justify-self-start">
-        {TABS.map(({ id, label }) => {
-          const selected = id === tab;
-          return (
-            <button
-              key={id}
-              type="button"
-              role="tab"
-              id={`game-finder-tab-${id}`}
-              aria-selected={selected}
-              aria-controls={`game-finder-panel-${id}`}
-              onClick={() => setTab(id)}
-              className={cn(
-                "flex-1 rounded-[14px] px-4 py-1.5 text-sm font-semibold whitespace-nowrap transition sm:flex-none",
-                selected ? "primary-button" : "text-muted hover:text-ink",
+        <FinderTabs id="game-finder" label="Stage" tabs={STAGE_TABS} value={tab} onChange={setTab} />
+
+        <div role="tabpanel" id={`game-finder-panel-${tab}`} aria-labelledby={`game-finder-tab-${tab}`} className="grid min-w-0 gap-3">
+          {tab === "league" ? (
+            openCourts ? (
+              <OpenLeagueTable team={team} position={position} myGamesOnly={myGamesOnly} onFilterChange={setMyGamesOnly} />
+            ) : (
+              <>
+                <p className="text-sm text-ink">
+                  {gamesPerPlayer} games per player · {gamesPerTeam} games per team
+                </p>
+                <LeagueTable entries={league} team={team} position={position} />
+              </>
+            )
+          ) : (
+            <>
+              <p className="text-sm text-ink">
+                Each playoff round: 2 games per player · Play all 5 games, even if the series is decided.
+              </p>
+              {openCourts && (
+                <p className="text-sm leading-6">Playoffs use fixed courts.</p>
               )}
-            >
-              {label}
-            </button>
-          );
-        })}
-      </div>
-
-      <div role="tabpanel" id={`game-finder-panel-${tab}`} aria-labelledby={`game-finder-tab-${tab}`} className="grid gap-3">
-        {tab === "league" ? (
-          <>
-            <p className="text-sm text-ink">
-              {gamesPerPlayer} games per player · {gamesPerTeam} games per team
-            </p>
-            <LeagueTable entries={league} team={team} position={position} />
-          </>
-        ) : (
-          <>
-            <p className="text-sm text-ink">
-              Each playoff round: 2 games per player · 5 games per team
-            </p>
-            <PlayoffTable team={team} position={position} />
-          </>
+              <PlayoffTable team={team} position={position} openCourts={openCourts} />
+              {openCourts && (
+                <p className="text-sm leading-6">
+                  Highlighted pairs are your games if your team qualifies. For each game, agree a lead among
+                  its four players to gather the group and record the result.
+                </p>
+              )}
+            </>
+          )}
+        </div>
+        {!openCourts && (
+          <p className="text-xs leading-5 text-muted">
+            Times are estimates. The timetable ends at {FINISH_TIME} PM with no overrun buffer.
+          </p>
         )}
       </div>
     </div>
