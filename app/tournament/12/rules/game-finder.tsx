@@ -4,10 +4,12 @@ import { Fragment, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
+import { TEAM_ROSTERS } from "../content";
 import {
   leagueFor,
   PLAYOFF_ROUNDS,
   POSITIONS,
+  SLOT_MINUTES,
   TEAMS,
   type PlayerSlot,
   type Team,
@@ -127,7 +129,7 @@ function LeagueTable({ entries, ...player }: { entries: PlayerSlot[] } & Player)
       <table className="w-full border-collapse text-left text-[0.85rem] sm:text-sm">
         <thead>
           <tr className={HEADER_ROW}>
-            <th className="w-px py-2 pr-2 pl-3 sm:pr-4 sm:pl-4">Time</th>
+            <th className="w-px py-2 pr-2 pl-3 sm:pr-4 sm:pl-4">Est. time</th>
             <th className="w-px px-1.5 py-2 text-center sm:px-3">Court</th>
             <th className="w-px px-2 py-2 whitespace-nowrap sm:px-4">Your pair</th>
             <th className="py-2 pr-3 pl-2 sm:pr-4">Opponents</th>
@@ -161,7 +163,7 @@ function PlayoffTable({ team, position }: Player) {
       <table className="w-full border-collapse text-left text-[0.85rem] sm:text-sm">
         <thead>
           <tr className={HEADER_ROW}>
-            <th className="w-px py-2 pr-2 pl-3 sm:pr-4 sm:pl-4">Time</th>
+            <th className="w-px py-2 pr-2 pl-3 sm:pr-4 sm:pl-4">Est. time</th>
             <th className="px-2 py-2 whitespace-nowrap">First court</th>
             <th className="py-2 pr-3 pl-2 whitespace-nowrap sm:pr-4">Second court</th>
           </tr>
@@ -227,6 +229,49 @@ const TABS = [
 
 type Tab = (typeof TABS)[number]["id"];
 
+function PlayRestPattern({ entries, player }: { entries: PlayerSlot[]; player: string }) {
+  return (
+    <div className="grid gap-3 rounded-2xl border border-outline/80 bg-white/60 p-3 sm:p-4">
+      <div>
+        <h3 className="font-semibold text-ink">Your play &amp; rest pattern</h3>
+        <p className="text-xs leading-5 text-muted">League slots 1–15 · P = play · R = rest · P* = back-to-back</p>
+      </div>
+      <ol
+        aria-label={`${player}: play and rest by slot`}
+        className="grid grid-cols-[repeat(15,minmax(0,1fr))] gap-0.5 sm:gap-1.5"
+      >
+        {entries.map((entry, idx) => {
+          const previous = entries[idx - 1];
+          const playing = entry.kind === "play";
+          const repeat = playing && previous?.kind === "play" && !previous.slot.breakAfter;
+          return (
+            <li key={entry.slot.number}>
+              <span aria-hidden="true" className="block text-center text-[11px] tabular-nums text-muted">{entry.slot.number}</span>
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "flex h-8 items-center justify-center rounded text-[11px] font-semibold sm:text-xs",
+                  repeat ? "bg-clay/20 text-ink ring-1 ring-inset ring-clay/50" : playing ? "bg-berry text-white" : "bg-court-soft text-muted",
+                )}
+              >
+                {repeat ? "P*" : playing ? "P" : "R"}
+              </span>
+              <span className="sr-only">
+                Slot {entry.slot.number}, {entry.slot.time}: {playing ? `play on Court ${entry.court}` : "rest"}.
+                {repeat ? " Consecutive game without a scheduled break." : ""}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+      <p className="text-xs leading-5 text-muted">
+        P* marks a consecutive appearance. A rest slot is a {SLOT_MINUTES}-minute planned window;
+        group breaks are listed in your schedule below.
+      </p>
+    </div>
+  );
+}
+
 export function GameFinder() {
   const [team, setTeam] = useState<Team>("A");
   const [position, setPosition] = useState<number>(1);
@@ -277,6 +322,7 @@ export function GameFinder() {
             <div className="grid gap-1">
               <p className="text-ink">
                 <span className="font-display text-xl font-semibold">{you}</span>
+                <span className="text-sm"> · {TEAM_ROSTERS[team][position - 1]}</span>
                 <span className="text-muted">
                   {" "}
                   plays <span className="font-semibold text-ink">{games.length} league games</span> and rests in{" "}
@@ -295,6 +341,7 @@ export function GameFinder() {
                 ))}
               </p>
             </div>
+            <PlayRestPattern entries={league} player={you} />
             <LeagueTable entries={league} team={team} position={position} />
           </>
         ) : (
