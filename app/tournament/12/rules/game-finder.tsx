@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 import {
   backToBackPlayersFor,
-  FINISH_TIME,
+  gamesIn,
   LEAGUE_FIXTURES,
   LEAGUE_SLOTS,
   leagueFor,
@@ -16,8 +16,6 @@ import {
   TEAMS,
   TENTATIVE_LEAGUE_STARTS,
   type Pair,
-  type PlayerId,
-  type PlayerSlot,
   type Team,
 } from "../schedule";
 
@@ -64,6 +62,7 @@ function ChoiceRow<T extends string | number>({
 type Player = { team: Team; position: number };
 
 const HEADER_ROW = "bg-court-soft/55 text-[0.66rem] font-semibold uppercase tracking-[0.06em] text-court sm:tracking-[0.16em]";
+const SELECTED_GAME = "bg-court font-semibold text-white";
 
 function BreakRow({ time, colSpan }: { time: string; colSpan: number }) {
   return (
@@ -75,72 +74,86 @@ function BreakRow({ time, colSpan }: { time: string; colSpan: number }) {
   );
 }
 
-function SlotRow({ entry, team, position }: { entry: PlayerSlot } & Player) {
-  const { slot } = entry;
+const COURTS = [1, 2, 3, 4] as const;
 
+function LeagueTable({ team, position }: Player) {
   return (
-    <tr
-      className={cn(
-        "border-t border-outline/60",
-        entry.kind === "play" && "bg-white",
-        entry.kind === "idle" && "text-muted/70",
-      )}
-    >
-      <td className="py-2 pr-2 pl-3 whitespace-nowrap tabular-nums sm:pr-4 sm:pl-4">
-        <span className={entry.kind === "play" ? "font-semibold text-ink" : undefined}>{slot.time}</span>
-      </td>
-      <td className="px-1.5 py-2 text-center sm:px-3">
-        {entry.kind === "play" ? (
-          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-court text-xs font-semibold text-white">
-            {entry.court}
-          </span>
-        ) : (
-          <span className="text-muted/60">–</span>
-        )}
-      </td>
-      {entry.kind === "play" ? (
-        <>
-          <td className="px-2 py-2 whitespace-nowrap text-ink sm:px-4">
-            <span className="font-semibold">{`${team}${position}`}</span> + {`${team}${entry.partner}`}
-          </td>
-          <td className="py-2 pr-3 pl-2 whitespace-nowrap sm:pr-4">
-            <span className="text-muted">vs </span>
-            <span className="text-ink">{`${entry.opponent}${position} + ${entry.opponent}${entry.partner}`}</span>
-          </td>
-        </>
-      ) : (
-        <td colSpan={2} className="py-2 pr-3 pl-2 sm:pr-4">
-          <span className="font-semibold text-clay">Rest</span>
-        </td>
-      )}
-    </tr>
-  );
-}
+    <>
+      <h3 id="assigned-league-heading" className="font-semibold text-ink">Highlighted games are yours</h3>
+      <div
+        role="region"
+        aria-labelledby="assigned-league-heading"
+        tabIndex={0}
+        className="relative max-h-[28rem] overflow-auto rounded-xl border border-outline/80 bg-white/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-berry"
+      >
+        <table className="w-full min-w-[40rem] border-collapse text-left text-sm">
+          <caption className="sr-only">Assigned Courts league games by time and court</caption>
+          <thead className="sticky top-0 z-20 bg-court-soft">
+            <tr className={HEADER_ROW}>
+              <th scope="col" className="sticky left-0 z-10 bg-court-soft px-3 py-2 whitespace-nowrap">Time</th>
+              {COURTS.map((court) => (
+                <th key={court} scope="col" className="px-3 py-2 whitespace-nowrap">Court {court}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {LEAGUE_SLOTS.map((slot, idx) => {
+              const games = gamesIn(slot);
+              const previousSlot = LEAGUE_SLOTS[idx - 1];
+              const previousPlayers = previousSlot && !previousSlot.breakAfter
+                ? gamesIn(previousSlot).flatMap((game) =>
+                  [game.home, game.away].flatMap((side) => game.pair.map((player) => `${side}${player}`)),
+                )
+                : [];
 
-function LeagueTable({ entries, ...player }: { entries: PlayerSlot[] } & Player) {
-  return (
-    <div className="overflow-x-auto rounded-xl border border-outline/80 bg-white/60">
-      <table className="w-full border-collapse text-left text-[0.85rem] sm:text-sm">
-        <thead>
-          <tr className={HEADER_ROW}>
-            <th className="w-px py-2 pr-2 pl-3 sm:pr-4 sm:pl-4">Est. time</th>
-            <th className="w-px px-1.5 py-2 text-center sm:px-3">Court</th>
-            <th className="w-px px-2 py-2 whitespace-nowrap sm:px-4">Your pair</th>
-            <th className="py-2 pr-3 pl-2 sm:pr-4">Opponents</th>
-          </tr>
-        </thead>
-        <tbody>
-          {entries.map((entry, idx) => (
-            <Fragment key={entry.slot.number}>
-              <SlotRow entry={entry} {...player} />
-              {entry.slot.breakAfter && idx < entries.length - 1 ? (
-                <BreakRow time={entry.slot.breakAfter} colSpan={4} />
-              ) : null}
-            </Fragment>
-          ))}
-        </tbody>
-      </table>
-    </div>
+              return (
+                <Fragment key={slot.number}>
+                  <tr className="border-t border-outline/60 text-ink">
+                    <th scope="row" className="sticky left-0 z-10 bg-white px-3 py-2 font-normal whitespace-nowrap tabular-nums">
+                      {slot.time}
+                    </th>
+                    {COURTS.map((court) => {
+                      const game = games.find((game) => game.court === court);
+                      const mine = game && (game.home === team || game.away === team) && game.pair.includes(position);
+                      return (
+                        <td key={court} className={cn("px-3 py-2", mine ? SELECTED_GAME : "bg-white")}>
+                          {game ? (
+                            <>
+                              {mine && <span className="sr-only">Your game: </span>}
+                              <LeaguePair
+                                team={game.home}
+                                pair={game.pair}
+                                backToBack={previousPlayers}
+                                highlighted={mine}
+                                backToBackNote="back-to-back with the previous slot (no scheduled break)"
+                              />
+                              <span className="block whitespace-nowrap">
+                                <span className={cn("font-normal", mine ? "text-white/80" : "text-muted")}>vs </span>
+                                <LeaguePair
+                                  team={game.away}
+                                  pair={game.pair}
+                                  backToBack={previousPlayers}
+                                  highlighted={mine}
+                                  backToBackNote="back-to-back with the previous slot (no scheduled break)"
+                                />
+                              </span>
+                            </>
+                          ) : <span className="text-muted/60">–</span>}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                  {slot.breakAfter && idx < LEAGUE_SLOTS.length - 1 ? (
+                    <BreakRow time={slot.breakAfter} colSpan={COURTS.length + 1} />
+                  ) : null}
+                </Fragment>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <p className="text-xs text-muted">* Played in the previous slot without a scheduled break.</p>
+    </>
   );
 }
 
@@ -158,7 +171,7 @@ function PlayoffTable({ team, position, openCourts }: Player & { openCourts: boo
       <table className="w-full border-collapse text-left text-[0.85rem] sm:text-sm">
         <thead>
           <tr className={HEADER_ROW}>
-            <th className="w-px py-2 pr-2 pl-3 sm:pr-4 sm:pl-4">Est. time</th>
+            <th className="w-px py-2 pr-2 pl-3 sm:pr-4 sm:pl-4">{openCourts ? "Est. time" : "Time"}</th>
             <th className="px-2 py-2 whitespace-nowrap">First court</th>
             <th className="py-2 pr-3 pl-2 whitespace-nowrap sm:pr-4">Second court</th>
           </tr>
@@ -189,7 +202,7 @@ function PlayoffTable({ team, position, openCourts }: Player & { openCourts: boo
                               <span
                                 className={cn(
                                   "inline-block rounded-lg px-2 py-0.5",
-                                  mine ? "bg-court font-semibold text-white" : "text-ink",
+                                  mine ? SELECTED_GAME : "text-ink",
                                 )}
                               >
                                 <span className="whitespace-nowrap">{`${team}${pair[0]} + ${team}${pair[1]}`}</span>{" "}
@@ -276,22 +289,34 @@ function FinderTabs<T extends string>({
   );
 }
 
-function OpenLeaguePair({ team, pair, backToBack }: { team: Team; pair: Pair; backToBack: PlayerId[] }) {
+function LeaguePair({
+  team,
+  pair,
+  backToBack,
+  highlighted = false,
+  backToBackNote = "back-to-back in the tentative schedule",
+}: {
+  team: string;
+  pair: Pair;
+  backToBack: string[];
+  highlighted?: boolean;
+  backToBackNote?: string;
+}) {
   return (
     <span className="whitespace-nowrap">
       {pair.map((position, idx) => {
-        const player = `${team}${position}` as PlayerId;
+        const player = `${team}${position}`;
         const consecutive = backToBack.includes(player);
         return (
           <Fragment key={player}>
             {idx > 0 && "+"}
             <span
-              title={consecutive ? `${player}: back-to-back in the tentative schedule` : undefined}
+              title={consecutive ? `${player}: ${backToBackNote}` : undefined}
             >
               {player}
               {consecutive && (
                 <>
-                  <sup aria-hidden="true" className="ml-px text-berry">*</sup>
+                  <sup aria-hidden="true" className={cn("ml-px", highlighted ? "text-white" : "text-berry")}>*</sup>
                   <span className="sr-only"> (back-to-back)</span>
                 </>
               )}
@@ -355,17 +380,16 @@ function OpenLeagueTable({
                 <tr
                   key={game.id}
                   className={cn(
-                    "text-ink",
-                    mine ? "bg-court-soft/60 font-semibold" : "bg-white",
+                    mine ? SELECTED_GAME : "bg-white text-ink",
                     newBatch ? "border-t-2 border-outline-strong" : "border-t border-outline/60",
                   )}
                 >
                   <th scope="row" className="px-3 py-2">{game.priority}</th>
                   <td className="px-2 py-2">
-                    <OpenLeaguePair team={game.home} pair={game.pair} backToBack={backToBack} />{" "}
+                    <LeaguePair team={game.home} pair={game.pair} backToBack={backToBack} highlighted={mine} />{" "}
                     <span className="inline-block whitespace-nowrap">
-                      <span className="font-normal text-muted">vs </span>
-                      <OpenLeaguePair team={game.away} pair={game.pair} backToBack={backToBack} />
+                      <span className={cn("font-normal", mine ? "text-white/80" : "text-muted")}>vs </span>
+                      <LeaguePair team={game.away} pair={game.pair} backToBack={backToBack} highlighted={mine} />
                     </span>
                   </td>
                   <td className="px-2 py-2 whitespace-nowrap tabular-nums">{planned.label}</td>
@@ -425,7 +449,7 @@ export function GameFinder() {
               {openCourts ? (
                 <OpenLeagueTable team={team} position={position} myGamesOnly={myGamesOnly} onFilterChange={setMyGamesOnly} />
               ) : (
-                <LeagueTable entries={league} team={team} position={position} />
+                <LeagueTable team={team} position={position} />
               )}
             </>
           ) : (
@@ -446,11 +470,6 @@ export function GameFinder() {
             </>
           )}
         </div>
-        {!openCourts && (
-          <p className="text-xs leading-5 text-muted">
-            Times are estimates. The timetable ends at {FINISH_TIME} PM with no overrun buffer.
-          </p>
-        )}
       </div>
     </div>
   );
