@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils";
 import {
   backToBackPlayersFor,
   FINISH_TIME,
-  GAMES,
   LEAGUE_FIXTURES,
   LEAGUE_SLOTS,
   leagueFor,
@@ -392,7 +391,8 @@ export function GameFinder() {
 
   const league = leagueFor(team, position);
   const gamesPerPlayer = league.filter((entry) => entry.kind === "play").length;
-  const gamesPerTeam = GAMES.filter((game) => game.home === team || game.away === team).length;
+  const gamesPerTeam = LEAGUE_FIXTURES.filter((game) => game.home === team || game.away === team).length;
+  const headToHeadGames = gamesPerTeam / (TEAMS.length - 1);
 
   return (
     <div className="grid gap-4">
@@ -417,16 +417,17 @@ export function GameFinder() {
 
         <div role="tabpanel" id={`game-finder-panel-${tab}`} aria-labelledby={`game-finder-tab-${tab}`} className="grid min-w-0 gap-3">
           {tab === "league" ? (
-            openCourts ? (
-              <OpenLeagueTable team={team} position={position} myGamesOnly={myGamesOnly} onFilterChange={setMyGamesOnly} />
-            ) : (
-              <>
-                <p className="text-sm text-ink">
-                  {gamesPerPlayer} games per player · {gamesPerTeam} games per team
-                </p>
+            <>
+              <p className="text-sm leading-6 text-ink">
+                {gamesPerPlayer} games per player · {gamesPerTeam} games per team ·{" "}
+                {headToHeadGames} head-to-head games against each other team
+              </p>
+              {openCourts ? (
+                <OpenLeagueTable team={team} position={position} myGamesOnly={myGamesOnly} onFilterChange={setMyGamesOnly} />
+              ) : (
                 <LeagueTable entries={league} team={team} position={position} />
-              </>
-            )
+              )}
+            </>
           ) : (
             <>
               <p className="text-sm text-ink">
