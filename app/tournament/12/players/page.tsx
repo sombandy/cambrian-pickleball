@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { TournamentSectionCard } from "@/components/tournament-section-card";
 import { getInitials } from "@/lib/utils";
 
-import { PLAYERS, TEAM_ROSTERS, WAITLIST } from "../content";
+import { PLAYERS, TEAM_CAPTAINS, TEAM_NAMES, TEAM_ROSTERS, WAITLIST } from "../content";
 import { TEAMS } from "../schedule";
 
 export const metadata: Metadata = {
@@ -31,10 +31,16 @@ export default function TournamentTwelvePlayersPage() {
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {TEAMS.map((team) => (
             <div key={team}>
-              <h3 className="font-display text-lg font-semibold text-ink">Team {team}</h3>
+              <h3 className="font-display text-lg font-semibold text-ink">
+                Team {team} ({TEAM_NAMES[team]})
+              </h3>
               <ol className="mt-2.5 grid gap-2.5">
                 {TEAM_ROSTERS[team].map((name, idx) => (
-                  <PlayerChip key={name} name={name} badge={`${team}${idx + 1}`} />
+                  <PlayerChip
+                    key={name}
+                    name={TEAM_CAPTAINS[team] === name ? `${name} (C)` : name}
+                    badge={`${team}${idx + 1}`}
+                  />
                 ))}
               </ol>
             </div>

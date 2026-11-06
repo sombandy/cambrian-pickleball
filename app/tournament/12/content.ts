@@ -36,6 +36,25 @@ export const TEAM_ROSTERS: Record<Team, string[]> = {
   F: ["Abhinay", "Balaji", "Jaski Singh", "Krishna Veturi", "Prabhu"],
 };
 
+export const TEAM_NAMES: Record<Team, string> = {
+  A: "Diwali Dinkers",
+  B: "Dink-A-Dhamaka",
+  C: "Susurbati Lobbers",
+  D: "Patakha Paddles",
+  E: "Lamp Lighters",
+  F: "Sutli Bomb Smashers",
+};
+
+// Captain per team (must match a TEAM_ROSTERS name).
+export const TEAM_CAPTAINS: Record<Team, string> = {
+  A: "Kaushik Ram",
+  B: "Jaynesh Doshi",
+  C: "Ankit Agarwal",
+  D: "Raja Rajendran",
+  E: "Arun V",
+  F: "Balaji",
+};
+
 export const PLAYERS = Object.values(TEAM_ROSTERS).flat();
 
 export const WAITLIST: string[] = [];
