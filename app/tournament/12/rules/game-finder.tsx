@@ -6,13 +6,11 @@ import { cn } from "@/lib/utils";
 
 import {
   backToBackPlayersFor,
-  gamesIn,
   LEAGUE_FIXTURES,
-  LEAGUE_SLOTS,
-  leagueFor,
   leagueFixturesFor,
   PLAYOFF_ROUNDS,
   POSITIONS,
+  SLOT_MINUTES,
   TEAMS,
   TENTATIVE_LEAGUE_STARTS,
   type Pair,
@@ -74,110 +72,24 @@ function BreakRow({ time, colSpan }: { time: string; colSpan: number }) {
   );
 }
 
-const COURTS = [1, 2, 3, 4] as const;
-
-function LeagueTable({ team, position }: Player) {
-  return (
-    <>
-      <h3 id="assigned-league-heading" className="font-semibold text-ink">Highlighted games are yours</h3>
-      <div
-        role="region"
-        aria-labelledby="assigned-league-heading"
-        tabIndex={0}
-        className="relative max-h-[28rem] overflow-auto rounded-xl border border-outline/80 bg-white/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-berry"
-      >
-        <table className="w-full min-w-[40rem] border-collapse text-left text-sm">
-          <caption className="sr-only">Assigned Courts league games by time and court</caption>
-          <thead className="sticky top-0 z-20 bg-court-soft">
-            <tr className={HEADER_ROW}>
-              <th scope="col" className="sticky left-0 z-10 bg-court-soft px-3 py-2 whitespace-nowrap">Time</th>
-              {COURTS.map((court) => (
-                <th key={court} scope="col" className="px-3 py-2 whitespace-nowrap">Court {court}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {LEAGUE_SLOTS.map((slot, idx) => {
-              const games = gamesIn(slot);
-              const previousSlot = LEAGUE_SLOTS[idx - 1];
-              const previousPlayers = previousSlot && !previousSlot.breakAfter
-                ? gamesIn(previousSlot).flatMap((game) =>
-                  [game.home, game.away].flatMap((side) => game.pair.map((player) => `${side}${player}`)),
-                )
-                : [];
-
-              return (
-                <Fragment key={slot.number}>
-                  <tr className="border-t border-outline/60 text-ink">
-                    <th scope="row" className="sticky left-0 z-10 bg-white px-3 py-2 font-normal whitespace-nowrap tabular-nums">
-                      {slot.time}
-                    </th>
-                    {COURTS.map((court) => {
-                      const game = games.find((game) => game.court === court);
-                      const mine = game && (game.home === team || game.away === team) && game.pair.includes(position);
-                      return (
-                        <td key={court} className={cn("px-3 py-2", mine ? SELECTED_GAME : "bg-white")}>
-                          {game ? (
-                            <>
-                              {mine && <span className="sr-only">Your game: </span>}
-                              <LeaguePair
-                                team={game.home}
-                                pair={game.pair}
-                                backToBack={previousPlayers}
-                                highlighted={mine}
-                                backToBackNote="back-to-back with the previous slot (no scheduled break)"
-                              />
-                              <span className="block whitespace-nowrap">
-                                <span className={cn("font-normal", mine ? "text-white/80" : "text-muted")}>vs </span>
-                                <LeaguePair
-                                  team={game.away}
-                                  pair={game.pair}
-                                  backToBack={previousPlayers}
-                                  highlighted={mine}
-                                  backToBackNote="back-to-back with the previous slot (no scheduled break)"
-                                />
-                              </span>
-                            </>
-                          ) : <span className="text-muted/60">–</span>}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                  {slot.breakAfter && idx < LEAGUE_SLOTS.length - 1 ? (
-                    <BreakRow time={slot.breakAfter} colSpan={COURTS.length + 1} />
-                  ) : null}
-                </Fragment>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-      <p className="text-xs text-muted">* Played in the previous slot without a scheduled break.</p>
-    </>
-  );
-}
-
 const PLAYOFF_NOTES: Record<string, string> = {
   Semifinals: "Seed 1 v Seed 4 on Courts 1 & 2 · Seed 2 v Seed 3 on Courts 3 & 4",
-  Final: "Semifinal winners on Courts 1 & 2",
+  Final: "Winners on Courts 1 & 2 · 3rd place: losers on Courts 3 & 4",
 };
 
 // Each playoff slot as First court / Second court, with the chosen player's game highlighted.
-function PlayoffTable({ team, position, openCourts }: Player & { openCourts: boolean }) {
-  const breakBefore = LEAGUE_SLOTS[LEAGUE_SLOTS.length - 1].breakAfter;
-
+function PlayoffTable({ team, position }: Player) {
   return (
     <div className="overflow-x-auto rounded-xl border border-outline/80 bg-white/60">
       <table className="w-full border-collapse text-left text-[0.85rem] sm:text-sm">
         <thead>
           <tr className={HEADER_ROW}>
-            <th className="w-px py-2 pr-2 pl-3 sm:pr-4 sm:pl-4">{openCourts ? "Est. time" : "Time"}</th>
+            <th className="w-px py-2 pr-2 pl-3 sm:pr-4 sm:pl-4">Est. time</th>
             <th className="px-2 py-2 whitespace-nowrap">First court</th>
             <th className="py-2 pr-3 pl-2 whitespace-nowrap sm:pr-4">Second court</th>
           </tr>
         </thead>
         <tbody>
-          {!openCourts && breakBefore ? <BreakRow time={breakBefore} colSpan={3} /> : null}
           {PLAYOFF_ROUNDS.map(({ stage, slots }) => (
             <Fragment key={stage}>
               <tr className="border-t border-outline/60 bg-court-soft/30">
@@ -234,13 +146,7 @@ const STAGE_TABS = [
   { id: "playoffs", label: "Playoffs" },
 ] as const;
 
-const FORMAT_TABS = [
-  { id: "assigned", label: "Assigned Courts" },
-  { id: "open", label: "Open Courts" },
-] as const;
-
 type Tab = (typeof STAGE_TABS)[number]["id"];
-type Format = (typeof FORMAT_TABS)[number]["id"];
 
 function FinderTabs<T extends string>({
   id,
@@ -294,13 +200,11 @@ function LeaguePair({
   pair,
   backToBack,
   highlighted = false,
-  backToBackNote = "back-to-back in the tentative schedule",
 }: {
   team: string;
   pair: Pair;
   backToBack: string[];
   highlighted?: boolean;
-  backToBackNote?: string;
 }) {
   return (
     <span className="whitespace-nowrap">
@@ -311,7 +215,7 @@ function LeaguePair({
           <Fragment key={player}>
             {idx > 0 && "+"}
             <span
-              title={consecutive ? `${player}: ${backToBackNote}` : undefined}
+              title={consecutive ? `${player}: back-to-back in the tentative schedule` : undefined}
             >
               {player}
               {consecutive && (
@@ -405,68 +309,66 @@ function OpenLeagueTable({
   );
 }
 
+const PLAYERS = TEAMS.length * POSITIONS.length;
+const GAMES_PER_PLAYER = (LEAGUE_FIXTURES.length * 4) / PLAYERS;
+const GAMES_PER_TEAM = (LEAGUE_FIXTURES.length * 2) / TEAMS.length;
+const HEAD_TO_HEAD = GAMES_PER_TEAM / (TEAMS.length - 1);
+
+function Intro({ items }: { items: React.ReactNode[] }) {
+  return (
+    <ul className="list-disc space-y-1 rounded-2xl border border-outline/80 bg-court-soft/30 py-3 pr-4 pl-8 text-sm leading-6">
+      {items.map((item, idx) => <li key={idx}>{item}</li>)}
+    </ul>
+  );
+}
+
+function Label({ children }: { children: React.ReactNode }) {
+  return <strong className="font-semibold text-ink">{children}</strong>;
+}
+
+const LEAGUE_INTRO = [
+  <><Label>{LEAGUE_FIXTURES.length} league games:</Label> {GAMES_PER_PLAYER} per player, {GAMES_PER_TEAM} per team, {HEAD_TO_HEAD} against each other team.</>,
+  <><Label>Open Courts:</Label> no fixed courts or times. When a court frees up, the lowest-numbered game whose four players are free takes it.</>,
+  <><Label>Game duration:</Label> about {SLOT_MINUTES} min, so start times below are estimates, not call times.</>,
+  <><Label>Lead:</Label> when your game is up, gather the other three players and take the empty court.</>,
+  <><Label>Everyone leads twice:</Label> once in games 1–30 and once in 31–60.</>,
+  <><Label>No referees:</Label> honor code; if the teams disagree on a call, replay the point.</>,
+];
+
+const PLAYOFF_INTRO = [
+  <><Label>Top 4 teams</Label> from the league qualify.</>,
+  <><Label>Semifinals:</Label> Seed 1 v 4 and Seed 2 v 3.</>,
+  <><Label>Final and 3rd place:</Label> semifinal winners play the final; semifinal losers play for 3rd place at the same time.</>,
+  <><Label>5 games per series:</Label> 2 per player. Play all 5, even if the series is decided.</>,
+  <><Label>Fixed courts:</Label> playoffs use the courts shown below.</>,
+  <><Label>Referees:</Label> neutral referees cover every playoff game.</>,
+];
+
 export function GameFinder() {
   const [team, setTeam] = useState<Team>("A");
   const [position, setPosition] = useState<number>(1);
   const [tab, setTab] = useState<Tab>("league");
-  const [format, setFormat] = useState<Format>("assigned");
   const [myGamesOnly, setMyGamesOnly] = useState(false);
-  const openCourts = format === "open";
 
-  const league = leagueFor(team, position);
-  const gamesPerPlayer = league.filter((entry) => entry.kind === "play").length;
-  const gamesPerTeam = LEAGUE_FIXTURES.filter((game) => game.home === team || game.away === team).length;
-  const headToHeadGames = gamesPerTeam / (TEAMS.length - 1);
+  const league = tab === "league";
 
   return (
     <div className="grid gap-4">
-      <FinderTabs id="game-format" label="Court format" tabs={FORMAT_TABS} value={format} onChange={setFormat} />
-      <div role="tabpanel" id={`game-format-panel-${format}`} aria-labelledby={`game-format-tab-${format}`} className="grid min-w-0 gap-4">
-        <div className="rounded-2xl border border-outline/80 bg-court-soft/30 px-4 py-3 text-sm leading-6">
-          {openCourts ? (
-            <>
-              <p><strong className="text-ink">Priority:</strong> lower ready game numbers go first.</p>
-              <p><strong className="text-ink">Lead:</strong> gather all four rested players and take an empty court.</p>
-            </>
-          ) : (
-            <p>Follow your assigned court on the organizer&apos;s slot call. Ten-minute breaks between blocks of three slots.</p>
-          )}
-        </div>
+      <FinderTabs id="game-finder" label="Stage" tabs={STAGE_TABS} value={tab} onChange={setTab} />
+
+      <div role="tabpanel" id={`game-finder-panel-${tab}`} aria-labelledby={`game-finder-tab-${tab}`} className="grid min-w-0 gap-4">
+        <Intro items={league ? LEAGUE_INTRO : PLAYOFF_INTRO} />
         <div className="grid gap-3 rounded-[24px] border border-outline/80 bg-white/70 p-4 sm:p-5">
           <ChoiceRow label="Team" options={TEAMS} value={team} onChange={setTeam} />
           <ChoiceRow label="Player" options={POSITIONS} value={position} onChange={setPosition} />
         </div>
-
-        <FinderTabs id="game-finder" label="Stage" tabs={STAGE_TABS} value={tab} onChange={setTab} />
-
-        <div role="tabpanel" id={`game-finder-panel-${tab}`} aria-labelledby={`game-finder-tab-${tab}`} className="grid min-w-0 gap-3">
-          {tab === "league" ? (
-            <>
-              <p className="text-sm leading-6 text-ink">
-                {gamesPerPlayer} games per player · {gamesPerTeam} games per team ·{" "}
-                {headToHeadGames} head-to-head games against each other team
-              </p>
-              {openCourts ? (
-                <OpenLeagueTable team={team} position={position} myGamesOnly={myGamesOnly} onFilterChange={setMyGamesOnly} />
-              ) : (
-                <LeagueTable team={team} position={position} />
-              )}
-            </>
+        <div className="grid min-w-0 gap-3">
+          {league ? (
+            <OpenLeagueTable team={team} position={position} myGamesOnly={myGamesOnly} onFilterChange={setMyGamesOnly} />
           ) : (
             <>
-              <p className="text-sm text-ink">
-                Each playoff round: 2 games per player · Play all 5 games, even if the series is decided.
-              </p>
-              {openCourts && (
-                <p className="text-sm leading-6">Playoffs use fixed courts.</p>
-              )}
-              <PlayoffTable team={team} position={position} openCourts={openCourts} />
-              {openCourts && (
-                <p className="text-sm leading-6">
-                  Highlighted pairs are your games if your team qualifies. For each game, agree a lead among
-                  its four players to gather the group and record the result.
-                </p>
-              )}
+              <PlayoffTable team={team} position={position} />
+              <p className="text-sm leading-6">Highlighted pairs are your games if your team qualifies.</p>
             </>
           )}
         </div>
