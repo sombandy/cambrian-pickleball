@@ -9,16 +9,19 @@ import { GameFinder } from "./game-finder";
 export const metadata: Metadata = {
   title: "Rules",
   description:
-    "Compare Assigned Courts and Open Courts, find your games, and review the rules for the 12th Cambrian Pickleball Tournament.",
+    "Games schedule and rules for the 12th Cambrian Pickleball Tournament.",
 };
 
 const ON_THIS_PAGE = [
-  { href: "#my-games", label: "Find your games" },
+  { href: "#my-games", label: "Games schedule" },
   { href: "#game-rules", label: "Game rules & points" },
   { href: "#venue", label: "Venue & check-in" },
 ];
 
 const LEAGUE_GAMES = LEAGUE_FIXTURES.length;
+// The 3rd-place series mirrors the final and runs alongside it on Courts 3 & 4.
+const THIRD_PLACE_GAMES = GAMES.filter((game) => game.home === "W1").length;
+const TOTAL_GAMES = GAMES.length + THIRD_PLACE_GAMES;
 
 const SUMMARY = [
   { label: "Teams", value: "6", detail: "5 players each" },
@@ -26,8 +29,8 @@ const SUMMARY = [
   { label: "Game budget", value: `${SLOT_MINUTES} min`, detail: "estimate incl. changeover" },
   {
     label: "Games",
-    value: `${GAMES.length}`,
-    detail: `${LEAGUE_GAMES} league + ${GAMES.length - LEAGUE_GAMES} playoffs`,
+    value: `${TOTAL_GAMES}`,
+    detail: `${LEAGUE_GAMES} league + ${TOTAL_GAMES - LEAGUE_GAMES} playoffs`,
   },
 ];
 
@@ -91,7 +94,7 @@ export default function TournamentTwelveRulesPage() {
         <p>
           Six teams of five players in one pool. Every team plays every other team four times, with the same numbered
           pair on both sides (A1+A2 v B1+B2). The top four teams play semifinals (Seed 1 v 4, Seed 2 v 3), then a
-          final. Compare two ways to run the same games below: Assigned Courts and Open Courts.
+          final and a 3rd-place game. League games are played on Open Courts.
         </p>
 
         <ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
@@ -114,8 +117,7 @@ export default function TournamentTwelveRulesPage() {
       </TournamentSectionCard>
 
       <section id="my-games" className="scroll-mt-6">
-        <TournamentSectionCard eyebrow="Your schedule" title="Find your games">
-          <p>Choose a format, team and player number.</p>
+        <TournamentSectionCard eyebrow="Your schedule" title="Games schedule">
           <GameFinder />
         </TournamentSectionCard>
       </section>
@@ -145,10 +147,18 @@ export default function TournamentTwelveRulesPage() {
           </BulletList>
 
           <SubHeading>Refereeing</SubHeading>
-          <p>
-            Neutral referees cover most games. Resting players may help, but stay available if you&apos;re
-            joining a ready group. Replay the point if the referee is unsure of a call.
-          </p>
+          <BulletList ordered>
+            <li>
+              <Strong>League games:</Strong> we will NOT have referees for league games. We request players to
+              follow the honor code and call reasonably and fairly. When there is disagreement between both teams,
+              the point will be replayed.
+            </li>
+            <li>
+              <Strong>Playoffs:</Strong>{" "}neutral referees will cover semifinal, final and 3rd-place games. Resting
+              players may help, but stay available if you&apos;re joining a ready group. The point will be replayed
+              at the referee&apos;s discretion if the referee is unsure of a call.
+            </li>
+          </BulletList>
 
           <SubHeading>Injuries and replacements</SubHeading>
           <BulletList>
@@ -165,7 +175,7 @@ export default function TournamentTwelveRulesPage() {
           <SubHeading>Playoff roster changes</SubHeading>
           <p>
             Player numbers are fixed roster positions. Each team may make up to <Strong>2 lineup changes</Strong>:
-            both before the first semifinal game, or one before the semifinals and one before the final.
+            both before the first semifinal game, or one before the semifinals and one before the final or 3rd-place game.
           </p>
 
           <SubHeading>Scoring</SubHeading>
@@ -191,7 +201,8 @@ export default function TournamentTwelveRulesPage() {
               { key: "standard", cells: ["Standard game", "Rally to 20, freeze, win on serve at 21"] },
               { key: "tied", cells: ["Tied 20-20", "Rally scoring, win by 2, capped at 23"] },
               { key: "tiebreak", cells: ["Tiebreak game", "To 15, freeze at 14, win on serve at 14"] },
-              { key: "unsure", cells: ["Unsure referee call", "Point is replayed"] },
+              { key: "disputed", cells: ["Disputed call (league)", "Point is replayed"] },
+              { key: "unsure", cells: ["Unsure referee call (playoffs)", "Replayed at the referee's discretion"] },
             ]}
           />
 
