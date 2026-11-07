@@ -78,12 +78,40 @@ function Table({ head, rows }: { head: React.ReactNode[]; rows: Row[] }) {
 export default function TournamentTwelveRulesPage() {
   return (
     <div className="grid min-w-0 grid-cols-1 gap-5">
-      <p className="px-1 text-[0.98rem] leading-7 text-muted">
-        Six teams of five players play one league in which every team meets every other team four times, and every
-        player plays 8 league games.
-        The top four teams move on to the semifinals (Seed 1 v 4, Seed 2 v 3), followed by the final and a 3rd-place
-        game. Each playoff round is a five-game series in which every player plays two games.
-      </p>
+      <section id="game-format" className="scroll-mt-6">
+        <TournamentSectionCard eyebrow="Format" title="Game format">
+          <SubHeading>League</SubHeading>
+          <BulletList>
+            <li>
+              Six teams of five players (P1–P5) play one league. Every team plays every other team four times: 20
+              games per team, 60 in all.
+            </li>
+            <li>
+              <Strong>Every pair plays:</Strong> all 10 pairs within a team (1+2, 1+3, … 4+5) play together in
+              exactly <Strong>2 league games</Strong>, each against a different team.
+            </li>
+            <li>
+              Every player plays <Strong>8 league games</Strong>, two with each of their four teammates.
+            </li>
+          </BulletList>
+
+          <SubHeading>Playoffs</SubHeading>
+          <BulletList>
+            <li>
+              The top four teams play the semifinals (Seed 1 v 4, Seed 2 v 3). The winners play the final, and the
+              other two teams play for 3rd place.
+            </li>
+            <li>
+              Each playoff round is a <Strong>five-game series</Strong> in which every player plays 2 games.
+            </li>
+            <li>The semifinals use five of the pairs (1+2, 3+4, 1+5, 2+3, 4+5).</li>
+            <li>
+              The final and 3rd-place series use the other five (1+3, 2+4, 1+4, 2+5, 3+5), so{" "}
+              <Strong>every pair plays once</Strong> in the playoffs.
+            </li>
+          </BulletList>
+        </TournamentSectionCard>
+      </section>
 
       <section id="my-games" className="scroll-mt-6">
         <TournamentSectionCard eyebrow="Your schedule" title="Games schedule">
