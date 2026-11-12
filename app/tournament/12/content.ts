@@ -1,6 +1,6 @@
 import { getTournamentFeedbackPath, getTournamentPath } from "@/lib/tournaments";
 
-import type { Team } from "./schedule";
+import { TEAMS, type Team } from "./schedule";
 
 export const TOURNAMENT_SLUG = "12";
 export const TOURNAMENT_PATH = getTournamentPath(TOURNAMENT_SLUG);
@@ -26,14 +26,14 @@ export const SECTIONS = [
   { label: "Feedback", href: FEEDBACK_PATH },
 ];
 
-// Each team sorted alphabetically; position sets the player number (first name is A1, last is A5).
+// Each team in its captain's proposed lineup order; position sets the player number (first name is player 1, last is player 5).
 export const TEAM_ROSTERS: Record<Team, string[]> = {
-  A: ["Kaushik Ram", "Naresh Ramaiya", "Nirav Shah", "Sharan Jayadevaiah", "Suren Seshadri"],
-  B: ["Devang Bhagat", "Jaynesh Doshi", "Kulwinder", "Som", "Srini"],
-  C: ["Ankit Agarwal", "Monish", "Piyush", "Rajan", "Satish Mavuri"],
-  D: ["Aditya", "Badhri Krishnamoorthy", "Bhanu Pamidi", "Raja Rajendran", "Rajesh Radhakrishnan"],
-  E: ["Arun V", "Basavaraj", "Priyank Jain", "Shivesh", "Venkata Ramanan"],
-  F: ["Abhinay", "Balaji", "Jaski Singh", "Krishna Veturi", "Prabhu"],
+  A: ["Sharan Jayadevaiah", "Nirav Shah", "Kaushik Ram", "Naresh Ramaiya", "Suren Seshadri"],
+  B: ["Kulwinder", "Jaynesh Doshi", "Srini", "Som", "Devang Bhagat"],
+  C: ["Satish Mavuri", "Piyush", "Ankit Agarwal", "Monish", "Rajan"],
+  D: ["Rajesh Radhakrishnan", "Aditya", "Bhanu Pamidi", "Badhri Krishnamoorthy", "Raja Rajendran"],
+  E: ["Venkata Ramanan", "Priyank Jain", "Arun V", "Basavaraj", "Shivesh"],
+  F: ["Abhinay", "Balaji", "Prabhu", "Krishna Veturi", "Jaski Singh"],
 };
 
 export const TEAM_NAMES: Record<Team, string> = {
@@ -56,5 +56,11 @@ export const TEAM_CAPTAINS: Record<Team, string> = {
 };
 
 export const PLAYERS = Object.values(TEAM_ROSTERS).flat();
+
+// Teams are known by number (Team 1–6); the schedule keys them A–F.
+export const teamNumber = (team: Team) => TEAMS.indexOf(team) + 1;
+
+// First name of a team's player at a 1-based lineup position. First names are unique across the tournament.
+export const playerName = (team: Team, position: number) => TEAM_ROSTERS[team][position - 1].split(" ")[0];
 
 export const WAITLIST: string[] = [];
