@@ -113,8 +113,8 @@ export default function TournamentTwelveRulesPage() {
         </TournamentSectionCard>
       </section>
 
-      <section id="my-games" className="scroll-mt-6">
-        <TournamentSectionCard eyebrow="Your schedule" title="Games schedule">
+      <section id="schedule" className="scroll-mt-6">
+        <TournamentSectionCard eyebrow="Your schedule" title="Games schedule" anchorId="schedule">
           <GameFinder />
         </TournamentSectionCard>
       </section>

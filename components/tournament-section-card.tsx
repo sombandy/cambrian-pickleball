@@ -3,11 +3,14 @@ import { cn } from "@/lib/utils";
 export function TournamentSectionCard({
   title,
   eyebrow,
+  anchorId,
   className,
   children,
 }: {
   title: string;
   eyebrow?: string;
+  /** When set, the title links to `#anchorId` so the section URL can be copied and shared. */
+  anchorId?: string;
   className?: string;
   children: React.ReactNode;
 }) {
@@ -24,7 +27,19 @@ export function TournamentSectionCard({
           eyebrow && "mt-2",
         )}
       >
-        {title}
+        {anchorId ? (
+          <a href={`#${anchorId}`} className="group/anchor">
+            {title}
+            <span
+              aria-hidden
+              className="ml-2 text-court opacity-0 transition-opacity group-hover/anchor:opacity-100 group-focus-visible/anchor:opacity-100"
+            >
+              #
+            </span>
+          </a>
+        ) : (
+          title
+        )}
       </h2>
       <div className="mt-4 space-y-4 text-[0.98rem] leading-7 text-muted">{children}</div>
     </section>
