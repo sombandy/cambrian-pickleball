@@ -28,7 +28,7 @@ export const SECTIONS = [
 
 // Each team in its captain's proposed lineup order; position sets the player number (first name is player 1, last is player 5).
 export const TEAM_ROSTERS: Record<Team, string[]> = {
-  A: ["Sharan Jayadevaiah", "Nirav Shah", "Kaushik Ram", "Naresh Ramaiya", "Suren Seshadri"],
+  A: ["Sharan Jayadevaiah", "Nirav Shah", "Naresh Ramaiya", "Kaushik Ram", "Suren Seshadri"],
   B: ["Kulwinder", "Jaynesh Doshi", "Srini", "Som", "Devang Bhagat"],
   C: ["Satish Mavuri", "Piyush", "Ankit Agarwal", "Monish", "Rajan"],
   D: ["Rajesh Radhakrishnan", "Aditya", "Bhanu Pamidi", "Badhri Krishnamoorthy", "Raja Rajendran"],
