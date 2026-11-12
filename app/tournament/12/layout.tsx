@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { CalendarDays, MapPin, Users } from "lucide-react";
 
 import { TournamentSubnav } from "@/components/tournament-subnav";
+import { TournamentIntro } from "@/components/tournament-intro";
 
 import {
   DATE_LABEL,
@@ -24,7 +25,7 @@ export const metadata: Metadata = {
 export default function TournamentTwelveLayout({ children }: { children: React.ReactNode }) {
   return (
     <main className="grid gap-5 pb-12">
-      <section className="surface-card relative isolate overflow-hidden rounded-[32px] px-5 py-8 sm:px-8 sm:py-10">
+      <TournamentIntro><section className="surface-card relative isolate overflow-hidden rounded-[32px] px-5 py-8 sm:px-8 sm:py-10">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(140,169,43,0.18),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(93,115,32,0.12),transparent_28%)]" />
 
         <div className="relative max-w-2xl">
@@ -72,7 +73,7 @@ export default function TournamentTwelveLayout({ children }: { children: React.R
             </li>
           </ul>
         </div>
-      </section>
+      </section></TournamentIntro>
 
       <TournamentSubnav sections={SECTIONS} />
 

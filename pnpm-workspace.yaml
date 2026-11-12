@@ -1,6 +1,14 @@
 packages:
   - .
 
+onlyBuiltDependencies:
+  - esbuild
+  - '@clerk/shared'
+
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
+  - core-js
+
+overrides:
+  'exceljs>uuid': '^11.1.1'

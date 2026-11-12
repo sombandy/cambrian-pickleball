@@ -105,3 +105,11 @@ pnpm db:generate  # create a migration from schema changes
 pnpm db:migrate   # apply migrations
 pnpm db:studio
 ```
+
+## Tournament 12 live scoring
+
+Open `/tournament/12/scores` for public scores, standings and playoff lineups. Editors use the existing Clerk login and must be listed in `TOURNAMENT_EDITOR_USER_IDS`. The backend uses the existing PostgreSQL `DATABASE_URL`.
+
+For a local demo with no credentials or database, run `pnpm dev` and open `/tournament/12/scores?practice=1`. Tap **Try score entry**. Practice changes stay on that browser.
+
+[Railway deployment and Google Sheets setup](docs/TOURNAMENT_SCORING.md) · [Tournament acceptance test plan](docs/TOURNAMENT_TEST_PLAN.md). Run automated checks with `pnpm test`.
