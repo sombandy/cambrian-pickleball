@@ -6,7 +6,30 @@ import {
   text,
   timestamp,
   uuid,
+  integer,
+  jsonb,
 } from "drizzle-orm/pg-core";
+
+// Dedicated tables keep scoring independent of community feedback and rankings.
+export const tournament12State = pgTable("tournament12_state", {
+  id: text("id").primaryKey(),
+  payload: jsonb("payload").notNull(),
+  revision: integer("revision").notNull().default(0),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+export const tournament12Operations = pgTable("tournament12_operations", {
+  operation: uuid("operation").primaryKey(),
+  actorId: text("actor_id").notNull(),
+  command: jsonb("command").notNull(),
+  revision: integer("revision").notNull().unique(),
+  beforePayload: jsonb("before_payload").notNull(),
+  afterPayload: jsonb("after_payload").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
 
 export const posts = pgTable(
   "posts",
@@ -18,13 +41,20 @@ export const posts = pgTable(
     clerkId: text("clerk_id"),
     // Null for the general tournament feedback board.
     tournamentSlug: text("tournament_slug"),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (table) => [
     index("posts_created_at_idx").on(table.createdAt),
     index("posts_category_idx").on(table.category),
-    index("posts_tournament_slug_idx").on(table.tournamentSlug, table.createdAt),
+    index("posts_tournament_slug_idx").on(
+      table.tournamentSlug,
+      table.createdAt,
+    ),
   ],
 );
 
@@ -37,7 +67,9 @@ export const comments = pgTable(
       .references(() => posts.id, { onDelete: "cascade" }),
     body: text("body").notNull(),
     clerkId: text("clerk_id"),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (table) => [index("comments_post_id_idx").on(table.postId, table.createdAt)],
 );
@@ -49,7 +81,9 @@ export const upvotes = pgTable(
     postId: uuid("post_id")
       .notNull()
       .references(() => posts.id, { onDelete: "cascade" }),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (table) => [
     primaryKey({ columns: [table.clerkId, table.postId] }),
@@ -63,7 +97,9 @@ export const rateLimitEvents = pgTable(
     id: bigserial("id", { mode: "number" }).primaryKey(),
     actorKey: text("actor_key").notNull(),
     scope: text("scope").notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (table) => [
     index("rate_limit_events_actor_scope_idx").on(

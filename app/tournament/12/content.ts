@@ -1,3 +1,4 @@
+import { TEAM_DIRECTORY, leaguePlayerNames } from '@/lib/tournament12/team-directory';
 import { getTournamentFeedbackPath, getTournamentPath } from "@/lib/tournaments";
 
 import { TEAMS, type Team } from "./schedule";
@@ -21,39 +22,16 @@ export const VENUE = {
 
 // Add new sections (e.g. Format) here; the tab bar picks them up.
 export const SECTIONS = [
+  { label: "Scores", href: `${TOURNAMENT_PATH}/scores` },
   { label: "Players", href: PLAYERS_PATH },
   { label: "Rules", href: RULES_PATH },
   { label: "Feedback", href: FEEDBACK_PATH },
 ];
 
 // Each team in its captain's proposed lineup order; position sets the player number (first name is player 1, last is player 5).
-export const TEAM_ROSTERS: Record<Team, string[]> = {
-  A: ["Sharan Jayadevaiah", "Nirav Shah", "Naresh Ramaiya", "Kaushik Ram", "Suren Seshadri"],
-  B: ["Kulwinder", "Jaynesh Doshi", "Srini", "Som", "Devang Bhagat"],
-  C: ["Satish Mavuri", "Piyush", "Ankit Agarwal", "Monish", "Rajan"],
-  D: ["Rajesh Radhakrishnan", "Aditya", "Bhanu Pamidi", "Badhri Krishnamoorthy", "Raja Rajendran"],
-  E: ["Venkata Ramanan", "Priyank Jain", "Arun V", "Basavaraj", "Shivesh"],
-  F: ["Abhinay", "Balaji", "Prabhu", "Krishna Veturi", "Jaski Singh"],
-};
-
-export const TEAM_NAMES: Record<Team, string> = {
-  A: "Diwali Dinkers",
-  B: "Dink-A-Dhamaka",
-  C: "Susurbati Lobbers",
-  D: "Patakha Paddles",
-  E: "Lamp Lighters",
-  F: "Sutli Bomb Smashers",
-};
-
-// Captain per team (must match a TEAM_ROSTERS name).
-export const TEAM_CAPTAINS: Record<Team, string> = {
-  A: "Kaushik Ram",
-  B: "Jaynesh Doshi",
-  C: "Ankit Agarwal",
-  D: "Raja Rajendran",
-  E: "Arun V",
-  F: "Balaji",
-};
+export const TEAM_ROSTERS = leaguePlayerNames();
+export const TEAM_NAMES = Object.fromEntries(TEAM_DIRECTORY.map(t => [t.scheduleLetter,t.name])) as Record<Team,string>;
+export const TEAM_CAPTAINS = Object.fromEntries(TEAM_DIRECTORY.map(t => [t.scheduleLetter,t.captainMemberName])) as Record<Team,string>;
 
 export const PLAYERS = Object.values(TEAM_ROSTERS).flat();
 
