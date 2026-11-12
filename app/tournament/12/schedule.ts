@@ -180,6 +180,51 @@ export const { slots: SLOTS, games: GAMES, finish: FINISH_TIME } = buildSchedule
 export const LEAGUE_SLOTS = SLOTS.filter((slot) => slot.stage === "League");
 export const PLAYOFF_SLOTS = SLOTS.filter((slot) => slot.stage !== "League");
 
+// Hard league rules for both formats: 8 games per player, 20 per team and 4
+// against each other team, on the same 60 fixtures, with no player on two
+// courts at once. Any reordering that breaks them fails the build.
+type LeagueGame = { home: string; away: string; pair: Pair; slot?: number };
+
+function tally(keys: string[]) {
+  const counts = new Map<string, number>();
+  keys.forEach((key) => counts.set(key, (counts.get(key) ?? 0) + 1));
+  return counts;
+}
+
+const fixtureKey = (game: LeagueGame) => `${[game.home, game.away].sort().join("")}${game.pair.join("")}`;
+const playersOf = (game: LeagueGame) => [game.home, game.away].flatMap((side) => game.pair.map((p) => `${side}${p}`));
+
+function assertLeague(format: string, games: LeagueGame[]) {
+  const fail = (problem: string) => {
+    throw new Error(`Tournament 12 ${format} league: ${problem}`);
+  };
+  const perPlayer = tally(games.flatMap(playersOf));
+  const perTeam = tally(games.flatMap((game) => [game.home, game.away]));
+  const headToHead = tally(games.map((game) => [game.home, game.away].sort().join("")));
+  TEAMS.forEach((team, idx) => {
+    if (perTeam.get(team) !== 20) fail(`team ${team} has ${perTeam.get(team) ?? 0} games, not 20`);
+    POSITIONS.forEach((position) => {
+      const count = perPlayer.get(`${team}${position}`) ?? 0;
+      if (count !== 8) fail(`${team}${position} has ${count} games, not 8`);
+    });
+    TEAMS.slice(idx + 1).forEach((other) => {
+      const count = headToHead.get(`${team}${other}`) ?? 0;
+      if (count !== 4) fail(`${team} v ${other} has ${count} games, not 4`);
+    });
+  });
+  tally(games.filter((game) => game.slot !== undefined).flatMap((game) => playersOf(game).map((player) => `${player} in slot ${game.slot}`)))
+    .forEach((count, key) => {
+      if (count > 1) fail(`${key} is on two courts`);
+    });
+}
+
+const ASSIGNED_LEAGUE_GAMES = GAMES.filter((game) => game.slot <= LEAGUE_SLOTS.length);
+assertLeague("Assigned Courts", ASSIGNED_LEAGUE_GAMES);
+assertLeague("Open Courts", LEAGUE_FIXTURES);
+if (ASSIGNED_LEAGUE_GAMES.map(fixtureKey).sort().join() !== LEAGUE_FIXTURES.map(fixtureKey).sort().join()) {
+  throw new Error("Tournament 12 league: Assigned Courts and Open Courts must use the same 60 fixtures");
+}
+
 // Open Courts uses consecutive 20-minute planning groups without league breaks.
 // Index by published priority so filtering never changes a game's estimate.
 export const TENTATIVE_LEAGUE_STARTS = OPEN_COURTS.flatMap((row, idx) =>
