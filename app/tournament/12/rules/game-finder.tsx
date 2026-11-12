@@ -64,6 +64,10 @@ function ChoiceRow<T extends string | number>({
 
 type Player = { team: Team; position: number };
 
+function possessiveName(team: Team, position: number) {
+  return `${playerName(team, position)}'s`;
+}
+
 const HEADER_ROW = "bg-court-soft/55 text-[0.66rem] font-semibold uppercase tracking-[0.06em] text-court sm:tracking-[0.16em]";
 const SELECTED_GAME = "bg-court font-semibold text-white";
 
@@ -245,12 +249,13 @@ function OpenLeagueTable({
 }: Player & { myGamesOnly: boolean; onFilterChange: (value: boolean) => void }) {
   const myFixtures = leagueFixturesFor(team, position);
   const fixtures = myGamesOnly ? myFixtures : LEAGUE_FIXTURES;
+  const possessive = possessiveName(team, position);
 
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <h3 id="league-list-heading" className="font-semibold text-ink">
-          {myGamesOnly ? `My ${fixtures.length} league games` : "Highlighted games are yours"}
+          {myGamesOnly ? `${possessive} ${fixtures.length} league games` : `Highlighted games are ${possessive}`}
         </h3>
         <div className="flex items-center gap-4">
           <label className="flex cursor-pointer items-center gap-2 text-sm text-ink">
@@ -260,7 +265,7 @@ function OpenLeagueTable({
               onChange={(event) => onFilterChange(event.target.checked)}
               className="h-4 w-4 accent-berry"
             />
-            My games only
+            {possessive} games only
           </label>
           <ExportMenu getSheet={() => leagueSheet(fixtures, myGamesOnly ? { team, position } : undefined)} />
         </div>
@@ -376,7 +381,7 @@ export function GameFinder() {
           ) : (
             <>
               <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-                <p className="text-sm leading-6">Highlighted pairs are your games if your team qualifies.</p>
+                <p className="text-sm leading-6">Highlighted pairs are {possessiveName(team, position)} games if their team qualifies.</p>
                 <ExportMenu getSheet={() => playoffSheet(team)} />
               </div>
               <PlayoffTable team={team} position={position} />
