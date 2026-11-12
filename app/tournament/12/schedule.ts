@@ -1,6 +1,7 @@
 // Fixtures and assigned-court schedule for Tournament 12: one pool, then
 // semifinals and a final. Every game matches the same numbered pair (A1+A2 v
-// B1+B2), so a game is fully described by its two teams and one pair.
+// B1+B2), so a game is fully described by its two teams and one pair. Teams are
+// keyed A–F here and shown as Team 1–6 with player names (see content.ts).
 
 export const TEAMS = ["A", "B", "C", "D", "E", "F"] as const;
 export type Team = (typeof TEAMS)[number];

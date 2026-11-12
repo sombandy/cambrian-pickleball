@@ -4,6 +4,7 @@ import { Fragment, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
+import { playerName, teamNumber } from "../content";
 import {
   backToBackPlayersFor,
   LEAGUE_FIXTURES,
@@ -22,18 +23,20 @@ function ChoiceRow<T extends string | number>({
   options,
   value,
   onChange,
+  optionLabel = String,
 }: {
   label: string;
   options: readonly T[];
   value: T;
   onChange: (value: T) => void;
+  optionLabel?: (option: T) => string | number;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
       <span className="w-full shrink-0 text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-court sm:w-16">
         {label}
       </span>
-      <div className="flex flex-1 gap-1.5 sm:flex-none" role="radiogroup" aria-label={label}>
+      <div className="flex flex-1 flex-wrap gap-1.5 sm:flex-none" role="radiogroup" aria-label={label}>
         {options.map((option) => {
           const selected = option === value;
           return (
@@ -48,7 +51,7 @@ function ChoiceRow<T extends string | number>({
                 selected ? "primary-button" : "soft-button text-muted hover:text-ink",
               )}
             >
-              {option}
+              {optionLabel(option)}
             </button>
           );
         })}
@@ -117,7 +120,7 @@ function PlayoffTable({ team, position }: Player) {
                                   mine ? SELECTED_GAME : "text-ink",
                                 )}
                               >
-                                <span className="whitespace-nowrap">{`${team}${pair[0]} + ${team}${pair[1]}`}</span>{" "}
+                                <span className="whitespace-nowrap">{`${playerName(team, pair[0])} + ${playerName(team, pair[1])}`}</span>{" "}
                                 <span className={cn("whitespace-nowrap", !mine && "text-muted")}>
                                   vs P{pair[0]} + P{pair[1]}
                                 </span>
@@ -201,7 +204,7 @@ function LeaguePair({
   backToBack,
   highlighted = false,
 }: {
-  team: string;
+  team: Team;
   pair: Pair;
   backToBack: string[];
   highlighted?: boolean;
@@ -209,13 +212,13 @@ function LeaguePair({
   return (
     <span className="whitespace-nowrap">
       {pair.map((position, idx) => {
-        const player = `${team}${position}`;
-        const consecutive = backToBack.includes(player);
+        const player = playerName(team, position);
+        const consecutive = backToBack.includes(`${team}${position}`);
         return (
           <Fragment key={player}>
             {idx > 0 && "+"}
             <span
-              title={consecutive ? `${player}: back-to-back in the tentative schedule` : undefined}
+              title={`Team ${teamNumber(team)}${consecutive ? " · back-to-back in the tentative schedule" : ""}`}
             >
               {player}
               {consecutive && (
@@ -297,7 +300,7 @@ function OpenLeagueTable({
                     </span>
                   </td>
                   <td className="px-2 py-2 whitespace-nowrap tabular-nums">{planned.label}</td>
-                  <td className="px-3 py-2">{game.lead}</td>
+                  <td className="px-3 py-2">{playerName(game.lead[0] as Team, Number(game.lead[1]))}</td>
                 </tr>
               );
             })}
@@ -359,8 +362,8 @@ export function GameFinder() {
       <div role="tabpanel" id={`game-finder-panel-${tab}`} aria-labelledby={`game-finder-tab-${tab}`} className="grid min-w-0 gap-4">
         <Intro items={league ? LEAGUE_INTRO : PLAYOFF_INTRO} />
         <div className="grid gap-3 rounded-[24px] border border-outline/80 bg-white/70 p-4 sm:p-5">
-          <ChoiceRow label="Team" options={TEAMS} value={team} onChange={setTeam} />
-          <ChoiceRow label="Player" options={POSITIONS} value={position} onChange={setPosition} />
+          <ChoiceRow label="Team" options={TEAMS} value={team} onChange={setTeam} optionLabel={teamNumber} />
+          <ChoiceRow label="Player" options={POSITIONS} value={position} onChange={setPosition} optionLabel={(option) => playerName(team, option)} />
         </div>
         <div className="grid min-w-0 gap-3">
           {league ? (
