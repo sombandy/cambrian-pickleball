@@ -17,6 +17,8 @@ import {
   type Pair,
   type Team,
 } from "../schedule";
+import { ExportMenu } from "./export-menu";
+import { leagueSheet, playoffSheet } from "./schedule-export";
 
 function ChoiceRow<T extends string | number>({
   label,
@@ -250,15 +252,18 @@ function OpenLeagueTable({
         <h3 id="league-list-heading" className="font-semibold text-ink">
           {myGamesOnly ? `My ${fixtures.length} league games` : "Highlighted games are yours"}
         </h3>
-        <label className="flex cursor-pointer items-center gap-2 text-sm text-ink">
-          <input
-            type="checkbox"
-            checked={myGamesOnly}
-            onChange={(event) => onFilterChange(event.target.checked)}
-            className="h-4 w-4 accent-berry"
-          />
-          My games only
-        </label>
+        <div className="flex items-center gap-4">
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-ink">
+            <input
+              type="checkbox"
+              checked={myGamesOnly}
+              onChange={(event) => onFilterChange(event.target.checked)}
+              className="h-4 w-4 accent-berry"
+            />
+            My games only
+          </label>
+          <ExportMenu getSheet={() => leagueSheet(fixtures, myGamesOnly ? { team, position } : undefined)} />
+        </div>
       </div>
       <div
         key={`${team}${position}-${myGamesOnly}`}
@@ -370,8 +375,11 @@ export function GameFinder() {
             <OpenLeagueTable team={team} position={position} myGamesOnly={myGamesOnly} onFilterChange={setMyGamesOnly} />
           ) : (
             <>
+              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                <p className="text-sm leading-6">Highlighted pairs are your games if your team qualifies.</p>
+                <ExportMenu getSheet={() => playoffSheet(team)} />
+              </div>
               <PlayoffTable team={team} position={position} />
-              <p className="text-sm leading-6">Highlighted pairs are your games if your team qualifies.</p>
             </>
           )}
         </div>
