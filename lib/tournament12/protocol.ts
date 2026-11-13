@@ -54,17 +54,3 @@ export const writeSchema = z
   })
   .strict();
 export type Command = z.infer<typeof writeSchema>;
-
-export function editorAllowed(
-  userId: string | null,
-  configured = process.env.TOURNAMENT_EDITOR_USER_IDS ?? "",
-) {
-  return (
-    !!userId &&
-    configured
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .includes(userId)
-  );
-}

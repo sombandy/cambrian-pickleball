@@ -198,7 +198,7 @@ export class TournamentStore {
         this.emit({
           pending: false,
           error:
-            "This account cannot edit. Sign in with the shared editor account.",
+            "This account cannot edit. Sign in with an email on the scorer list.",
         });
       } else if (
         message.includes("INVALID_DATA") ||

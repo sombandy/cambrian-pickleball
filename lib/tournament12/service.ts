@@ -51,7 +51,7 @@ export async function saveTournament(
   return database.transaction(async (tx) => {
     // All writes serialize on one row; checking the operation before revision makes lost-response retries safe.
     await tx.query(
-      "INSERT INTO tournament12_state (id,payload,revision) VALUES ($1,$2::jsonb,0) ON CONFLICT (id) DO NOTHING",
+      "INSERT INTO tournament12_state (id,payload,revision) VALUES ($1,$2::text::jsonb,0) ON CONFLICT (id) DO NOTHING",
       ["12", JSON.stringify(initialTournament())],
     );
     const [row] = await tx.query<StateRow>(
@@ -95,12 +95,12 @@ export async function saveTournament(
       throw new ScoringError("INVALID_DATA", 422);
     }
     const [next] = await tx.query<StateRow>(
-      "UPDATE tournament12_state SET payload=$1::jsonb,revision=revision+1,updated_at=$2 WHERE id=$3 RETURNING payload,revision,updated_at",
+      "UPDATE tournament12_state SET payload=$1::text::jsonb,revision=revision+1,updated_at=$2 WHERE id=$3 RETURNING payload,revision,updated_at",
       [JSON.stringify(payload), at, "12"],
     );
     // The audit and state commit together, with authenticated account and self-reported operator kept separate.
     await tx.query(
-      "INSERT INTO tournament12_operations (operation,actor_id,command,revision,before_payload,after_payload,created_at) VALUES ($1,$2,$3::jsonb,$4,$5::jsonb,$6::jsonb,$7)",
+      "INSERT INTO tournament12_operations (operation,actor_id,command,revision,before_payload,after_payload,created_at) VALUES ($1,$2,$3::text::jsonb,$4,$5::text::jsonb,$6::text::jsonb,$7)",
       [
         command.operation,
         actorId,

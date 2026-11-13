@@ -108,7 +108,7 @@ pnpm db:studio
 
 ## Tournament 12 live scoring
 
-Open `/tournament/12/scores` for public scores, standings and playoff lineups. Editors use the existing Clerk login and must be listed in `TOURNAMENT_EDITOR_USER_IDS`. The backend uses the existing PostgreSQL `DATABASE_URL`.
+Open `/tournament/12/scores` for public scores, standings and playoff lineups. Editors sign in with the existing Clerk login; their verified email must be listed in `lib/tournament12/editors.ts`. The league game order lives in `app/tournament/12/league-games.ts` and feeds both the published schedule and the scorer. The backend uses the existing PostgreSQL `DATABASE_URL`.
 
 For a local demo with no credentials or database, run `pnpm dev` and open `/tournament/12/scores?practice=1`. Tap **Try score entry**. Practice changes stay on that browser.
 

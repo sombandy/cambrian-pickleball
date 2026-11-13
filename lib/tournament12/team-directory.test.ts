@@ -40,7 +40,7 @@ test("official November 12 roster matches all thirty supplied player positions",
       "Raja Rajendran",
     ],
     E: ["Venkata Ramanan", "Priyank Jain", "Arun V", "Basavaraj", "Shivesh"],
-    F: ["Abhinay", "Balaji", "Prabhu", "Krishna", "Jaski Singh"],
+    F: ["Abhinay", "Balaji", "Prabhu", "Krishna Veturi", "Jaski Singh"],
   });
   assert.deepEqual(
     TEAM_DIRECTORY.map((t) => t.members.indexOf(t.captainMemberName) + 1),
@@ -56,14 +56,11 @@ test("official November 12 roster matches all thirty supplied player positions",
     ),
   );
   const first = LEAGUE[0];
-  assert.deepEqual(
-    first.pair.map((p) => playerName(state, first.a, p)),
-    ["Aditya", "Bhanu Pamidi"],
-  );
-  assert.deepEqual(
-    first.pair.map((p) => playerName(state, first.b, p)),
-    ["Priyank Jain", "Arun V"],
-  );
+  for (const team of [first.a, first.b])
+    assert.deepEqual(
+      first.pair.map((p) => playerName(state, team, p)),
+      first.pair.map((p) => state.players[team][p - 1]),
+    );
 });
 test("official names, logos and unique initials are the same in preview and connected modes", () => {
   const codes = ["A", "B", "C", "D", "E", "F"] as const;

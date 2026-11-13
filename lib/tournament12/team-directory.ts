@@ -94,7 +94,7 @@ export const TEAM_DIRECTORY: readonly NamedTeam[] = [
     abbreviation: "SBS",
     captain: "Balaji Rengarajan",
     captainMemberName: "Balaji",
-    members: ["Abhinay", "Balaji", "Prabhu", "Krishna", "Jaski Singh"],
+    members: ["Abhinay", "Balaji", "Prabhu", "Krishna Veturi", "Jaski Singh"],
     logo: "team-logos/sutli-bomb-smashers.jpg",
   },
 ];
@@ -109,6 +109,9 @@ export function teamDisplay(code: TeamCode) {
     logo: named.logo,
   };
 }
+// Game rows on both the published schedule and the live scorer show first names
+// (unique across the tournament, and short enough for a phone); rosters show full names.
+export const firstName = (fullName: string) => fullName.trim().split(/\s+/)[0];
 export function leaguePlayerNames(): Record<TeamCode, string[]> {
   return Object.fromEntries(
     TEAM_DIRECTORY.map((t) => [t.scheduleLetter, [...t.members]]),

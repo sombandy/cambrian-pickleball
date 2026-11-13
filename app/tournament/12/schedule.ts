@@ -3,6 +3,8 @@
 // B1+B2), so a game is fully described by its two teams and one pair. Teams are
 // keyed A–F here and shown as Team 1–6 with player names (see content.ts).
 
+import { LEAGUE_GAME_ORDER } from "./league-games";
+
 export const TEAMS = ["A", "B", "C", "D", "E", "F"] as const;
 export type Team = (typeof TEAMS)[number];
 
@@ -60,26 +62,14 @@ const LEAGUE: [Team, Team, Pair][][] = [
 // consecutive batches, plays back-to-back batches more than twice, or sits out
 // more than two batches in a row. Only two players start as late as the third
 // batch (the minimum: fielding all five of a team takes three games, and eight
-// games give six teams only 16 appearances, not 18). The fourth value is the
-// game lead: a participant who did not play in the preceding batch. Everyone
-// leads twice, once in games 1–30 and once in 31–60.
-const OPEN_COURTS: [Team, Team, Pair, PlayerId][][] = [
-  [["A", "F", [3, 4], "A3"], ["B", "E", [3, 4], "B4"], ["C", "D", [3, 4], "C4"], ["A", "B", [1, 2], "B1"]],
-  [["D", "E", [1, 2], "E1"], ["C", "F", [1, 2], "F2"], ["F", "B", [3, 5], "F5"], ["A", "D", [3, 5], "D5"]],
-  [["E", "C", [3, 5], "C3"], ["D", "B", [2, 4], "D4"], ["A", "C", [2, 4], "A2"], ["E", "F", [2, 4], "F4"]],
-  [["A", "F", [1, 3], "F1"], ["C", "D", [1, 3], "C1"], ["B", "E", [1, 3], "B3"], ["A", "B", [4, 5], "B5"]],
-  [["C", "F", [4, 5], "C5"], ["D", "E", [4, 5], "E4"], ["C", "D", [1, 2], "D2"], ["B", "E", [1, 2], "E2"]],
-  [["A", "F", [1, 2], "A1"], ["A", "B", [3, 4], "A4"], ["C", "F", [3, 4], "F3"], ["D", "E", [3, 4], "E3"]],
-  [["D", "B", [1, 5], "D1"], ["A", "C", [1, 5], "A5"], ["E", "F", [1, 5], "E5"], ["A", "B", [2, 3], "B2"]],
-  [["D", "E", [2, 3], "D3"], ["C", "F", [2, 3], "C2"], ["D", "B", [4, 5], "D4"], ["E", "F", [4, 5], "E4"]],
-  [["A", "C", [4, 5], "C4"], ["A", "E", [1, 3], "E1"], ["B", "C", [1, 3], "B3"], ["F", "D", [1, 3], "D1"]],
-  [["B", "E", [2, 5], "B2"], ["A", "F", [2, 5], "F5"], ["C", "D", [2, 5], "D2"], ["B", "C", [1, 4], "B4"]],
-  [["A", "E", [1, 4], "A4"], ["F", "D", [1, 4], "F1"], ["E", "F", [2, 3], "E3"], ["A", "C", [2, 3], "C3"]],
-  [["D", "B", [2, 3], "D3"], ["E", "C", [1, 5], "E5"], ["A", "D", [1, 5], "D5"], ["F", "B", [1, 5], "B5"]],
-  [["E", "C", [2, 4], "E2"], ["F", "B", [2, 4], "F4"], ["A", "D", [2, 4], "A2"], ["A", "E", [3, 5], "A3"]],
-  [["F", "D", [3, 5], "F3"], ["B", "C", [3, 5], "C5"], ["F", "B", [1, 4], "B1"], ["A", "D", [1, 4], "A1"]],
-  [["A", "E", [2, 5], "A5"], ["E", "C", [1, 4], "C1"], ["B", "C", [2, 5], "C2"], ["F", "D", [2, 5], "F2"]],
-];
+// games give six teams only 16 appearances, not 18). Each game has a lead: a
+// participant who did not play in the preceding batch. Everyone leads twice,
+// once in games 1–30 and once in 31–60.
+// The queue itself lives in league-games.ts, shared with live scoring.
+const BATCH_SIZE = 4;
+LEAGUE_GAME_ORDER.forEach(([game], idx) => {
+  if (game !== idx + 1) throw new Error(`Tournament 12 league-games.ts: row ${idx + 1} is numbered ${game}`);
+});
 
 export type LeagueFixture = {
   id: string;
@@ -94,7 +84,7 @@ export type LeagueFixture = {
 // Published once, left to right through the league order. Filtering for a
 // player or skipping a blocked game must never renumber these IDs. Court and
 // start/end times belong to execution, not to the shared-queue fixture.
-export const LEAGUE_FIXTURES: LeagueFixture[] = OPEN_COURTS.flat().map(([home, away, pair, lead], idx) => ({
+export const LEAGUE_FIXTURES: LeagueFixture[] = LEAGUE_GAME_ORDER.map(([, home, away, pair, lead], idx) => ({
   id: `L${String(idx + 1).padStart(2, "0")}`,
   stage: "League",
   priority: idx + 1,
@@ -229,13 +219,10 @@ if (ASSIGNED_LEAGUE_GAMES.map(fixtureKey).sort().join() !== LEAGUE_FIXTURES.map(
 
 // Open Courts uses consecutive 20-minute planning groups without league breaks.
 // Index by published priority so filtering never changes a game's estimate.
-export const TENTATIVE_LEAGUE_STARTS = OPEN_COURTS.flatMap((row, idx) =>
-  row.map(() => ({
-    batch: idx,
-    minutes: idx * SLOT_MINUTES,
-    label: clock(idx * SLOT_MINUTES),
-  })),
-);
+export const TENTATIVE_LEAGUE_STARTS = LEAGUE_GAME_ORDER.map((_, idx) => {
+  const batch = Math.floor(idx / BATCH_SIZE);
+  return { batch, minutes: batch * SLOT_MINUTES, label: clock(batch * SLOT_MINUTES) };
+});
 
 // Evaluate against the complete tentative schedule, never a filtered player
 // list. These are planned consecutive appearances, not live availability.

@@ -1,5 +1,5 @@
 import { LEAGUE_FIXTURES } from "../../app/tournament/12/schedule";
-import { leaguePlayerNames } from "./team-directory";
+import { firstName, leaguePlayerNames } from "./team-directory";
 
 export const TEAMS = ["A", "B", "C", "D", "E", "F"] as const;
 export type Team = (typeof TEAMS)[number];
@@ -116,6 +116,13 @@ export function playerName(
     `${team}${originalPosition}`
   );
 }
+// First name only, matching the published game schedule.
+export const playerFirstName = (
+  s: Tournament,
+  team: Team,
+  slot: number,
+  phase: Phase = "league",
+) => firstName(playerName(s, team, slot, phase));
 export function gamesFor(s: Tournament, phase: Phase): Game[] {
   if (phase === "league") return LEAGUE;
   const pairs =

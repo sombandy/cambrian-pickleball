@@ -8,7 +8,7 @@ import {
   type Query,
   type ScoreDatabase,
 } from "./service";
-import { editorAllowed } from "./protocol";
+import { editorAllowed } from "./editors";
 import {
   LEAGUE,
   gamesFor,
@@ -58,11 +58,13 @@ const command = (
   editor: "Organizer",
 });
 
-test("only explicitly configured Clerk IDs can edit; blank config and ordinary signed-in users cannot", () => {
-  assert.equal(editorAllowed(null, "user_editor"), false);
-  assert.equal(editorAllowed("user_editor", ""), false);
-  assert.equal(editorAllowed("user_viewer", "user_editor"), false);
-  assert.equal(editorAllowed("user_editor", " user_owner, user_editor "), true);
+test("only listed, verified emails can edit; an empty list and other signed-in users cannot", () => {
+  const allowed = ["Owner@Example.com", " scorer@example.com "];
+  assert.equal(editorAllowed([], allowed), false);
+  assert.equal(editorAllowed(["scorer@example.com"], []), false);
+  assert.equal(editorAllowed(["viewer@example.com"], allowed), false);
+  assert.equal(editorAllowed(["viewer@example.com", "SCORER@example.com"], allowed), true);
+  assert.equal(editorAllowed(["owner@example.com"], allowed), true);
 });
 test("scorer uses the same sixty fixtures, partnerships and leads as the published schedule", () => {
   assert.deepEqual(
