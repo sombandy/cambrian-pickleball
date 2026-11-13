@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { SignInButton, useAuth, useClerk } from "@clerk/nextjs";
+import { SignInButton, useAuth, useClerk, useUser } from "@clerk/nextjs";
 import { Desk } from "./ui";
 import { TournamentStore, practiceBackend } from "./store";
 import { httpBackend } from "./http-backend";
@@ -83,9 +83,11 @@ function Practice() {
 function Live({
   authControl,
   editor = false,
+  signedInName,
 }: {
   authControl: React.ReactNode;
   editor?: boolean;
+  signedInName?: string;
 }) {
   const store = useMemo(
     () => new TournamentStore(httpBackend(), localStorage, "railway:12"),
@@ -97,6 +99,7 @@ function Live({
       practice={false}
       editor={editor}
       auth={authControl}
+      signedInName={signedInName}
       draftScope="railway:12"
     />
   );
@@ -104,6 +107,11 @@ function Live({
 function AuthenticatedLive() {
   const { isLoaded, isSignedIn, userId } = useAuth();
   const { signOut } = useClerk();
+  const { user } = useUser();
+  // Same rule as the server (editor-auth.ts): account name, else the email's local part.
+  const signedInName =
+    user?.fullName?.trim() ||
+    user?.primaryEmailAddress?.emailAddress.split("@")[0];
   const [editor, setEditor] = useState(false);
   useEffect(() => {
     let active = true;
@@ -131,6 +139,7 @@ function AuthenticatedLive() {
   return (
     <Live
       editor={!!isSignedIn && editor}
+      signedInName={isSignedIn ? signedInName : undefined}
       authControl={
         isSignedIn ? (
           <button className="button quiet" onClick={() => void signOut()}>

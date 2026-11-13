@@ -130,6 +130,7 @@ export function Desk({
   auth,
   draftScope = "live",
   practiceTools,
+  signedInName,
 }: {
   store: TournamentStore;
   editor: boolean;
@@ -137,13 +138,16 @@ export function Desk({
   auth: ReactNode;
   draftScope?: string;
   practiceTools?: ReactNode;
+  // Name on the signed-in account; when set, the scorer is not asked to type one.
+  signedInName?: string;
 }) {
   const view = useSyncExternalStore(store.subscribe, store.getSnapshot);
   const s = view.snapshot.payload;
   const [tab, setTab] = useState<Tab>("games");
-  const [editorName, setEditorName] = useState(() =>
+  const [typedName, setTypedName] = useState(() =>
     localGet(`cpl12:${draftScope}:editor-name`),
   );
+  const editorName = signedInName || typedName;
   const [notice, setNotice] = useState("");
   const [actionError, setActionError] = useState("");
   const [online, setOnline] = useState(navigator.onLine);
@@ -358,20 +362,24 @@ export function Desk({
             <div className="editor-strip">
               <ShieldCheck size={18} />
               <strong>Editor mode</strong>
-              <label>
-                <span>Your name</span>
-                <input
-                  aria-label="Your name"
-                  value={editorName}
-                  maxLength={80}
-                  onChange={(e) => {
-                    setEditorName(e.target.value);
-                    localSet(`cpl12:${draftScope}:editor-name`, e.target.value);
-                  }}
-                  placeholder="Enter your name"
-                  autoComplete="given-name"
-                />
-              </label>
+              {signedInName ? (
+                <span>Signed in as {signedInName}</span>
+              ) : (
+                <label>
+                  <span>Your name</span>
+                  <input
+                    aria-label="Your name"
+                    value={typedName}
+                    maxLength={80}
+                    onChange={(e) => {
+                      setTypedName(e.target.value);
+                      localSet(`cpl12:${draftScope}:editor-name`, e.target.value);
+                    }}
+                    placeholder="Enter your name"
+                    autoComplete="given-name"
+                  />
+                </label>
+              )}
             </div>
           )}
           {(view.error || actionError || !online) && (
