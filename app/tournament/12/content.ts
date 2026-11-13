@@ -1,4 +1,4 @@
-import { TEAM_DIRECTORY, firstName, leaguePlayerNames } from '@/lib/tournament12/team-directory';
+import { firstName, leaguePlayerNames } from '@/lib/tournament12/team-directory';
 import { getTournamentFeedbackPath, getTournamentPath } from "@/lib/tournaments";
 
 import { TEAMS, type Team } from "./schedule";
@@ -6,7 +6,7 @@ import { TEAMS, type Team } from "./schedule";
 export const TOURNAMENT_SLUG = "12";
 export const TOURNAMENT_PATH = getTournamentPath(TOURNAMENT_SLUG);
 export const FEEDBACK_PATH = getTournamentFeedbackPath(TOURNAMENT_SLUG);
-export const PLAYERS_PATH = `${TOURNAMENT_PATH}/players`;
+export const TEAMS_PATH = `${TOURNAMENT_PATH}/teams`;
 export const RULES_PATH = `${TOURNAMENT_PATH}/rules`;
 
 export const TOURNAMENT_TITLE = "12th Cambrian Pickleball Tournament";
@@ -23,15 +23,13 @@ export const VENUE = {
 // Add new sections (e.g. Format) here; the tab bar picks them up.
 export const SECTIONS = [
   { label: "Scores", href: `${TOURNAMENT_PATH}/scores` },
-  { label: "Players", href: PLAYERS_PATH },
+  { label: "Teams", href: TEAMS_PATH },
   { label: "Rules", href: RULES_PATH },
   { label: "Feedback", href: FEEDBACK_PATH },
 ];
 
 // Each team in its captain's proposed lineup order; position sets the player number (first name is player 1, last is player 5).
 export const TEAM_ROSTERS = leaguePlayerNames();
-export const TEAM_NAMES = Object.fromEntries(TEAM_DIRECTORY.map(t => [t.scheduleLetter,t.name])) as Record<Team,string>;
-export const TEAM_CAPTAINS = Object.fromEntries(TEAM_DIRECTORY.map(t => [t.scheduleLetter,t.captainMemberName])) as Record<Team,string>;
 
 export const PLAYERS = Object.values(TEAM_ROSTERS).flat();
 

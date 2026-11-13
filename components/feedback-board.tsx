@@ -1,6 +1,3 @@
-import { UserButton } from "@clerk/nextjs";
-import Link from "next/link";
-
 import { PaginationControls } from "@/components/pagination-controls";
 import { PostCard } from "@/components/post-card";
 import { PostForm } from "@/components/post-form";
@@ -10,7 +7,10 @@ import { getViewerAuth } from "@/lib/auth";
 import { listPosts } from "@/lib/data";
 import { paginationSchema, sortSchema } from "@/lib/validators";
 
-export type FeedbackSearchParams = Record<string, string | string[] | undefined>;
+export type FeedbackSearchParams = Record<
+  string,
+  string | string[] | undefined
+>;
 
 function getSingleValue(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
@@ -55,24 +55,6 @@ export async function FeedbackBoard({
         <h1 className="font-display text-2xl font-semibold tracking-tight text-ink md:text-3xl">
           {heading}
         </h1>
-        {!viewer.isSignedIn ? (
-          <Link
-            href={`/sign-in?redirect_url=${encodeURIComponent(`${basePath}#share-feedback`)}`}
-            className="secondary-button rounded-full px-4 py-2.5 text-sm font-medium"
-          >
-            Sign in
-          </Link>
-        ) : (
-          <div className="rounded-2xl border border-outline bg-white/92 p-1.5 shadow-[0_18px_30px_-28px_rgba(30,41,59,0.26)]">
-            <UserButton
-              appearance={{
-                elements: {
-                  userButtonAvatarBox: "h-9 w-9 rounded-xl",
-                },
-              }}
-            />
-          </div>
-        )}
       </div>
 
       {intro}

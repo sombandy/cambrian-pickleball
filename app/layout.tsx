@@ -3,6 +3,7 @@ import { ClerkWrapper } from "@/components/clerk-wrapper";
 import { Bricolage_Grotesque, Source_Sans_3 } from "next/font/google";
 
 import { SiteHeader } from "@/components/site-header";
+import { clerkEnabled } from "@/lib/clerk-enabled";
 
 import "./globals.css";
 
@@ -39,7 +40,7 @@ export default function RootLayout({
       <body className="min-h-full">
         <ClerkWrapper>
           <div className="flex min-h-screen flex-col">
-            <SiteHeader />
+            <SiteHeader accountEnabled={clerkEnabled} />
             <div className="mx-auto w-full max-w-4xl flex-1 px-4 pb-12 pt-5 sm:px-6">
               {children}
             </div>

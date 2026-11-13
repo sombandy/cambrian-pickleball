@@ -17,11 +17,11 @@ import {
   Flag,
   Info,
   ListOrdered,
+  LogIn,
   RefreshCw,
   Search,
   ShieldCheck,
   Trophy,
-  Users,
   WifiOff,
 } from "lucide-react";
 import {
@@ -48,9 +48,9 @@ import {
   prepareGoogleExport,
 } from "./export";
 import type { TournamentStore } from "./store";
-import { TEAM_DIRECTORY, teamDisplay } from "./team-directory";
+import { teamDisplay } from "./team-directory";
 
-type Tab = "games" | "standings" | "playoffs" | "teams" | "backup";
+type Tab = "games" | "standings" | "playoffs" | "backup";
 const stageName = (stage: string) =>
   stage === "league"
     ? "League round"
@@ -131,6 +131,7 @@ export function Desk({
   draftScope = "live",
   practiceTools,
   signedInName,
+  viewerHint,
 }: {
   store: TournamentStore;
   editor: boolean;
@@ -140,6 +141,8 @@ export function Desk({
   practiceTools?: ReactNode;
   // Name on the signed-in account; when set, the scorer is not asked to type one.
   signedInName?: string;
+  // Shown to viewers who cannot edit, e.g. how scorers sign in.
+  viewerHint?: ReactNode;
 }) {
   const view = useSyncExternalStore(store.subscribe, store.getSnapshot);
   const s = view.snapshot.payload;
@@ -232,7 +235,6 @@ export function Desk({
     { id: "games", label: "Games", icon: ClipboardList },
     { id: "standings", label: "Standings", icon: ListOrdered },
     { id: "playoffs", label: "Playoffs", icon: Trophy },
-    { id: "teams", label: "Teams", icon: Users },
     { id: "backup", label: "Export", icon: ArrowDownToLine },
   ] as const;
   return (
@@ -248,22 +250,8 @@ export function Desk({
           </span>
         </div>
       )}
-      <header className="site-header">
+      <header className={auth ? "site-header" : "site-header trim-only"}>
         <div className="diwali-trim" aria-hidden="true" />
-        <div className="brand">
-          <Image
-            unoptimized
-            className="tournament-art"
-            src={`/tournament12/tournament-art.png`}
-            alt="12th Cambrian Pickleball Tournament artwork"
-            width={60}
-            height={60}
-          />
-          <div>
-            <strong>12th Cambrian</strong>
-            <small>Pickleball Tournament</small>
-          </div>
-        </div>
         {auth}
       </header>
       {practiceTools}
@@ -286,20 +274,6 @@ export function Desk({
               </button>
             ))}
           </nav>
-          <div className="venue-note">
-            <strong>Saturday, Nov 14</strong>
-            <span>11 AM–7 PM</span>
-            <span>Ace Pickleball Club</span>
-            <span>San Jose</span>
-          </div>
-          <a
-            className="text-link"
-            href="https://cambrianpickleball.com/tournament/12/rules"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Tournament rules <ExternalLink size={14} />
-          </a>
         </aside>
         <main id="main" className="main-content">
           <div className="day-line">
@@ -335,9 +309,7 @@ export function Desk({
                     ? "Standings"
                     : tab === "playoffs"
                       ? "Playoffs"
-                      : tab === "teams"
-                        ? "Teams"
-                        : "Export"}
+                      : "Export"}
               </h1>
             </div>
             <div className="heading-diya">
@@ -381,6 +353,12 @@ export function Desk({
                 </label>
               )}
             </div>
+          )}
+          {!editor && viewerHint && (
+            <p className="editor-strip viewer-hint">
+              <LogIn size={18} />
+              <span>{viewerHint}</span>
+            </p>
           )}
           {(view.error || actionError || !online) && (
             <div className="notice error" role="alert">
@@ -458,14 +436,6 @@ export function Desk({
                   save={save}
                   ask={setConfirm}
                   setTab={navigateTab}
-                />
-              )}
-              {tab === "teams" && (
-                <TeamsView
-                  state={s}
-                  editor={editor}
-                  ready={ready}
-                  save={save}
                 />
               )}
               {tab === "backup" && (
@@ -1498,179 +1468,6 @@ function TieForm({
         Save tiebreak
       </button>
     </form>
-  );
-}
-function TeamsView({
-  state: s,
-  editor,
-  ready,
-  save,
-}: {
-  state: Tournament;
-  editor: boolean;
-  ready: boolean;
-  save: (a: Action) => Promise<boolean>;
-}) {
-  return (
-    <>
-      <div className="section-intro">
-        <h2>Teams & captains</h2>
-        <p>
-          Official league lineups, listed in P1–P5 order. Use Playoffs for
-          position swaps before each playoff round.
-        </p>
-      </div>
-
-      <div className="team-directory">
-        {TEAM_DIRECTORY.map((team) => (
-          <section
-            className="named-team"
-            key={team.id}
-            aria-labelledby={`team-${team.id}`}
-          >
-            <div className="named-team-header">
-              <a
-                className="team-logo-link"
-                href={`/tournament12/${team.logo}`}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={`View ${team.name} logo`}
-              >
-                <Image
-                  unoptimized
-                  className="team-logo"
-                  src={`/tournament12/${team.logo}`}
-                  alt={`${team.name} logo`}
-                  width={96}
-                  height={96}
-                  loading="lazy"
-                />
-              </a>
-              <div>
-                <h3 id={`team-${team.id}`}>{team.name}</h3>
-                <p>
-                  <span>
-                    Team {team.scheduleLetter} · {team.abbreviation} · Captain
-                  </span>
-                  {team.captain}
-                </p>
-              </div>
-            </div>
-            <ul
-              className="member-list"
-              aria-label={`${team.name} league players in P1 to P5 order`}
-            >
-              {team.members.map((name, i) => (
-                <li key={`${team.scheduleLetter}-${i}`}>
-                  <span className="member-position">P{i + 1}</span>
-                  <span className="member-name">
-                    {playerName(s, team.scheduleLetter, i + 1)}
-                  </span>
-                  {name === team.captainMemberName && <small>Captain</small>}
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))}
-      </div>
-      <details className="plain-details">
-        <summary>League names & position details</summary>
-        <p>
-          League positions are fixed. Edit spelling here; use Playoffs to swap
-          player positions.
-        </p>
-        <div className="roster-grid">
-          {TEAMS.map((t) => (
-            <Roster
-              key={t}
-              team={t}
-              state={s}
-              editor={editor}
-              ready={ready}
-              save={save}
-            />
-          ))}
-        </div>
-      </details>
-    </>
-  );
-}
-function Roster({
-  team: t,
-  state: s,
-  editor,
-  ready,
-  save,
-}: {
-  team: Team;
-  state: Tournament;
-  editor: boolean;
-  ready: boolean;
-  save: (a: Action) => Promise<boolean>;
-}) {
-  const [names, setNames] = useState(() =>
-    [1, 2, 3, 4, 5].map((p) => playerName(s, t, p)),
-  );
-  const [editing, setEditing] = useState(false);
-  return (
-    <section className="roster-panel">
-      <div className="roster-heading">
-        {teamBadge(t)}
-        <h3 title={identity(t).name}>
-          {identity(t).shortName} <small>({t})</small>
-        </h3>
-        {editor && (
-          <button
-            className="text-button"
-            onClick={() => {
-              if (!editing) {
-                setNames([1, 2, 3, 4, 5].map((p) => playerName(s, t, p)));
-              }
-              setEditing(!editing);
-            }}
-          >
-            {editing ? "Close" : "Edit names"}
-          </button>
-        )}
-      </div>
-      {editing ? (
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            if (await save({ type: "names", team: t, names })) {
-              setEditing(false);
-            }
-          }}
-        >
-          {names.map((name, i) => (
-            <label className="name-field" key={i}>
-              <span>P{i + 1}</span>
-              <input
-                aria-label={`Team ${t} player ${i + 1} name`}
-                value={name}
-                maxLength={80}
-                placeholder={`${t}${i + 1}`}
-                onChange={(e) => {
-                  setNames(names.map((n, j) => (j === i ? e.target.value : n)));
-                }}
-              />
-            </label>
-          ))}
-          <button className="button secondary wide" disabled={!ready}>
-            Save names <Check size={17} />
-          </button>
-        </form>
-      ) : (
-        <ol className="lineup-list">
-          {[1, 2, 3, 4, 5].map((p) => (
-            <li key={p}>
-              <span>P{p}</span>
-              <strong>{playerName(s, t, p)}</strong>
-            </li>
-          ))}
-        </ol>
-      )}
-    </section>
   );
 }
 function Backup({
