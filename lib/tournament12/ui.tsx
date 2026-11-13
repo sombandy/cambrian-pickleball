@@ -13,6 +13,7 @@ import {
   ChevronDown,
   ChevronRight,
   ClipboardList,
+  ClipboardCheck,
   ExternalLink,
   Flag,
   Info,
@@ -50,7 +51,7 @@ import {
 import type { TournamentStore } from "./store";
 import { teamDisplay } from "./team-directory";
 
-type Tab = "games" | "standings" | "playoffs" | "backup";
+type Tab = "games" | "results" | "standings" | "playoffs" | "backup";
 const stageName = (stage: string) =>
   stage === "league"
     ? "League round"
@@ -152,6 +153,7 @@ export function Desk({
   );
   const editorName = signedInName || typedName;
   const [notice, setNotice] = useState("");
+  const [scoreSaved, setScoreSaved] = useState(false);
   const [actionError, setActionError] = useState("");
   const [online, setOnline] = useState(navigator.onLine);
   const [confirm, setConfirm] = useState<{
@@ -218,6 +220,7 @@ export function Desk({
     setActionError("");
     try {
       await store.save(action, editorName);
+      setScoreSaved(action.type === "score");
       setNotice(
         action.type === "score"
           ? `${action.id.replace("L", "Game ")} saved`
@@ -233,6 +236,7 @@ export function Desk({
   }
   const nav = [
     { id: "games", label: "Games", icon: ClipboardList },
+    { id: "results", label: "Results", icon: ClipboardCheck },
     { id: "standings", label: "Standings", icon: ListOrdered },
     { id: "playoffs", label: "Playoffs", icon: Trophy },
     { id: "backup", label: "Export", icon: ArrowDownToLine },
@@ -305,11 +309,13 @@ export function Desk({
               <h1>
                 {tab === "games"
                   ? "Games"
-                  : tab === "standings"
-                    ? "Standings"
-                    : tab === "playoffs"
-                      ? "Playoffs"
-                      : "Export"}
+                  : tab === "results"
+                    ? "Results"
+                    : tab === "standings"
+                      ? "Standings"
+                      : tab === "playoffs"
+                        ? "Playoffs"
+                        : "Export"}
               </h1>
             </div>
             <div className="heading-diya">
@@ -345,7 +351,10 @@ export function Desk({
                     maxLength={80}
                     onChange={(e) => {
                       setTypedName(e.target.value);
-                      localSet(`cpl12:${draftScope}:editor-name`, e.target.value);
+                      localSet(
+                        `cpl12:${draftScope}:editor-name`,
+                        e.target.value,
+                      );
                     }}
                     placeholder="Enter your name"
                     autoComplete="given-name"
@@ -423,6 +432,19 @@ export function Desk({
                 </>
               )}
               {tab === "standings" && <Standings state={s} />}
+              {tab === "results" && (
+                <Games
+                  key={`results-${activePhase}`}
+                  state={s}
+                  phase={activePhase}
+                  resultsOnly
+                  editor={editor}
+                  ready={ready}
+                  saving={view.saving}
+                  save={save}
+                  draftScope={draftScope}
+                />
+              )}
               {tab === "playoffs" && (
                 <Playoffs
                   key={LEAGUE.map((g) =>
@@ -512,13 +534,24 @@ export function Desk({
         <div className="toast" role="status">
           <Check size={18} />
           {notice}
+          {scoreSaved && (
+            <button
+              type="button"
+              onClick={() => {
+                navigateTab("results");
+                setNotice("");
+              }}
+            >
+              View results
+            </button>
+          )}
         </div>
       )}
     </>
   );
 }
 
-function Games({
+export function Games({
   state: s,
   phase,
   editor,
@@ -526,6 +559,7 @@ function Games({
   saving,
   save,
   draftScope,
+  resultsOnly = false,
 }: {
   state: Tournament;
   phase: Phase;
@@ -534,33 +568,42 @@ function Games({
   saving: boolean;
   save: (a: Action) => Promise<boolean>;
   draftScope: string;
+  resultsOnly?: boolean;
 }) {
   const [team, setTeam] = useState("all");
-  const [status, setStatus] = useState("pending");
   const [query, setQuery] = useState("");
   const [limit, setLimit] = useState(20);
   const [open, setOpen] = useState<string | null>(null);
-  const [selectedPhase, setSelectedPhase] = useState<Phase>(phase);
-  const games = gamesFor(s, selectedPhase);
+  const [selectedPhase, setSelectedPhase] = useState<Phase | "all">(
+    resultsOnly ? "all" : phase,
+  );
+  const games =
+    selectedPhase === "all"
+      ? [...LEAGUE, ...gamesFor(s, "semis"), ...gamesFor(s, "finals")]
+      : gamesFor(s, selectedPhase);
   const filtered = games.filter((g) => {
     const matchTeam = team === "all" || g.a === team || g.b === team;
-    const matchState =
-      status === "all" ||
-      (status === "saved" ? !!s.results[g.id] : !s.results[g.id]);
+    const matchState = resultsOnly ? !!s.results[g.id] : !s.results[g.id];
     const text =
       `${g.id} ${g.number} team ${g.a} team ${g.b} ${identity(g.a).name} ${identity(g.b).name} ${identity(g.a).abbreviation} ${identity(g.b).abbreviation} ${g.pair.map((p) => playerName(s, g.a, p, g.phase) + " " + playerName(s, g.b, p, g.phase)).join(" ")}`.toLowerCase();
     return (
       matchTeam && matchState && (!query || text.includes(query.toLowerCase()))
     );
   });
+  if (resultsOnly)
+    filtered.sort((a, b) =>
+      s.results[b.id].at.localeCompare(s.results[a.id].at),
+    );
   return (
     <>
       <div className="section-intro">
-        <h2>Game scores</h2>
+        <h2>{resultsOnly ? "Completed games" : "Game scores"}</h2>
         <p>
-          {editor
-            ? "Find the game. Enter both final scores. Save."
-            : "Follow results as organizers save them."}
+          {resultsOnly
+            ? "Final scores from every round. Latest saves appear first."
+            : editor
+              ? "Find the game. Enter both final scores. Save."
+              : "Upcoming games. Open Results to see completed games."}
         </p>
       </div>
       <div className="filter-bar">
@@ -593,33 +636,21 @@ function Games({
             ))}
           </select>
         </label>
-        <label>
-          <span className="sr-only">Filter by status</span>
-          <select
-            value={status}
-            onChange={(e) => {
-              setStatus(e.target.value);
-              setLimit(20);
-            }}
-          >
-            <option value="pending">To play</option>
-            <option value="saved">Saved</option>
-            <option value="all">All games</option>
-          </select>
-        </label>
       </div>
-      {s.seeds.length > 0 && (
+      {(resultsOnly || s.seeds.length > 0) && (
         <label className="round-picker">
           Round{" "}
           <select
             value={selectedPhase}
             onChange={(e) => {
-              setSelectedPhase(e.target.value as Phase);
+              setSelectedPhase(e.target.value as Phase | "all");
+              setLimit(20);
               setOpen(null);
             }}
           >
+            {resultsOnly && <option value="all">All rounds</option>}
             <option value="league">League</option>
-            <option value="semis">Semifinals</option>
+            {s.seeds.length > 0 && <option value="semis">Semifinals</option>}
             {s.finalists.final.length > 0 && (
               <option value="finals">Final / third place</option>
             )}
@@ -629,16 +660,18 @@ function Games({
       <div className="list-heading">
         <span>
           {filtered.length}{" "}
-          {status === "pending"
-            ? "to play"
-            : status === "saved"
-              ? "saved"
-              : "games"}
+          {resultsOnly
+            ? filtered.length === 1
+              ? "result"
+              : "results"
+            : "to play"}
         </span>
         <span>
-          {selectedPhase === "league"
-            ? "Open courts · game order"
-            : "Fixed playoff courts"}
+          {resultsOnly
+            ? "Latest saved first"
+            : selectedPhase === "league"
+              ? "Open courts · game order"
+              : "Fixed playoff courts"}
         </span>
       </div>
       <div className="game-list">
@@ -649,7 +682,7 @@ function Games({
             state={s}
             open={open === g.id}
             setOpen={() => setOpen(open === g.id ? null : g.id)}
-            editor={editor && selectedPhase === s.stage}
+            editor={editor && g.phase === s.stage}
             ready={ready}
             saving={saving}
             save={save}
@@ -661,16 +694,23 @@ function Games({
         <div className="empty-state">
           <Check size={27} />
           <h3>
-            {games.length &&
-            !games.some((g) => !s.results[g.id]) &&
-            status === "pending"
-              ? "All results are in."
-              : "No games match these filters."}
+            {resultsOnly
+              ? games.some((g) => s.results[g.id])
+                ? "No results match these filters."
+                : "No results yet."
+              : games.length &&
+                  !games.some((g) => !s.results[g.id]) &&
+                  !query &&
+                  team === "all"
+                ? "All results are in."
+                : "No games match these filters."}
           </h3>
           <p>
-            {status === "pending"
-              ? "Choose “Saved” to view completed games."
-              : "Try a different team or player."}
+            {resultsOnly && !games.some((g) => s.results[g.id])
+              ? "Saved scores will appear here for everyone to see."
+              : !resultsOnly && !query && team === "all"
+                ? "Open Results to view completed games."
+                : "Try a different team or player."}
           </p>
         </div>
       )}
@@ -679,7 +719,8 @@ function Games({
           className="button secondary wide"
           onClick={() => setLimit(limit + 20)}
         >
-          Show more games <ChevronDown size={17} />
+          {resultsOnly ? "Show more results" : "Show more games"}{" "}
+          <ChevronDown size={17} />
         </button>
       )}
       <div className="note-line">
