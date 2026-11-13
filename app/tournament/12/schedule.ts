@@ -55,28 +55,30 @@ const LEAGUE: [Team, Team, Pair][][] = [
 
 // Open Courts league: the same 60 fixtures in queue order, in planning batches
 // of four. No player appears twice in any five consecutive games, so when a
-// court frees up the next game's players are normally all off court. Adjacent
-// batches share only four players (the minimum: a five-player team appearing
-// three times across two batches must repeat someone), and those repeats sit in
-// the last two games of the next batch, so its first two games are always fully
-// rested. The fourth value is the game lead: a participant who did not play in
-// the preceding batch. Everyone leads twice, once in games 1–30 and once in 31–60.
+// court frees up the next game's players are normally all off court, and the
+// first game of every batch is fully rested. No player plays in three
+// consecutive batches, plays back-to-back batches more than twice, or sits out
+// more than two batches in a row. Only two players start as late as the third
+// batch (the minimum: fielding all five of a team takes three games, and eight
+// games give six teams only 16 appearances, not 18). The fourth value is the
+// game lead: a participant who did not play in the preceding batch. Everyone
+// leads twice, once in games 1–30 and once in 31–60.
 const OPEN_COURTS: [Team, Team, Pair, PlayerId][][] = [
-  [["D", "E", [2, 3], "D2"], ["A", "B", [2, 3], "A3"], ["D", "B", [1, 5], "B5"], ["C", "F", [2, 3], "C3"]],
-  [["E", "F", [4, 5], "F4"], ["A", "C", [4, 5], "A5"], ["D", "B", [2, 4], "B4"], ["A", "E", [1, 3], "A1"]],
-  [["F", "D", [1, 3], "F1"], ["B", "C", [1, 3], "C1"], ["A", "E", [2, 5], "E2"], ["F", "D", [2, 5], "F2"]],
-  [["B", "C", [2, 5], "C2"], ["A", "E", [1, 4], "E1"], ["F", "D", [1, 4], "D4"], ["B", "C", [1, 4], "C4"]],
-  [["A", "E", [3, 5], "E3"], ["F", "D", [3, 5], "D5"], ["B", "C", [3, 5], "B3"], ["A", "F", [1, 2], "A2"]],
-  [["B", "E", [1, 2], "B2"], ["C", "D", [1, 2], "D1"], ["A", "F", [3, 4], "A4"], ["B", "E", [3, 4], "E4"]],
-  [["C", "D", [3, 4], "D3"], ["A", "F", [2, 5], "F5"], ["B", "E", [2, 5], "E5"], ["C", "D", [2, 5], "C5"]],
-  [["A", "F", [1, 3], "F3"], ["B", "E", [1, 3], "B1"], ["C", "D", [1, 3], "C1"], ["E", "F", [2, 4], "F4"]],
-  [["A", "C", [2, 4], "C4"], ["D", "B", [4, 5], "D4"], ["E", "F", [1, 5], "E5"], ["A", "C", [1, 5], "C5"]],
-  [["D", "B", [2, 3], "B2"], ["E", "F", [2, 3], "F3"], ["A", "C", [2, 3], "A3"], ["F", "B", [1, 4], "B1"]],
-  [["A", "D", [1, 4], "D1"], ["E", "C", [1, 4], "E4"], ["F", "B", [3, 5], "B5"], ["A", "D", [3, 5], "A5"]],
-  [["E", "C", [3, 5], "E3"], ["F", "B", [2, 4], "B4"], ["A", "D", [2, 4], "D2"], ["E", "C", [2, 4], "C2"]],
-  [["F", "B", [1, 5], "F1"], ["A", "D", [1, 5], "A1"], ["E", "C", [1, 5], "E1"], ["A", "B", [3, 4], "B3"]],
-  [["C", "F", [3, 4], "C3"], ["D", "E", [3, 4], "D3"], ["A", "B", [1, 2], "A2"], ["C", "F", [1, 2], "F2"]],
-  [["D", "E", [1, 2], "E2"], ["A", "B", [4, 5], "A4"], ["C", "F", [4, 5], "F5"], ["D", "E", [4, 5], "D5"]],
+  [["A", "F", [3, 4], "A3"], ["B", "E", [3, 4], "B4"], ["C", "D", [3, 4], "C4"], ["A", "B", [1, 2], "B1"]],
+  [["D", "E", [1, 2], "E1"], ["C", "F", [1, 2], "F2"], ["F", "B", [3, 5], "F5"], ["A", "D", [3, 5], "D5"]],
+  [["E", "C", [3, 5], "C3"], ["D", "B", [2, 4], "D4"], ["A", "C", [2, 4], "A2"], ["E", "F", [2, 4], "F4"]],
+  [["A", "F", [1, 3], "F1"], ["C", "D", [1, 3], "C1"], ["B", "E", [1, 3], "B3"], ["A", "B", [4, 5], "B5"]],
+  [["C", "F", [4, 5], "C5"], ["D", "E", [4, 5], "E4"], ["C", "D", [1, 2], "D2"], ["B", "E", [1, 2], "E2"]],
+  [["A", "F", [1, 2], "A1"], ["A", "B", [3, 4], "A4"], ["C", "F", [3, 4], "F3"], ["D", "E", [3, 4], "E3"]],
+  [["D", "B", [1, 5], "D1"], ["A", "C", [1, 5], "A5"], ["E", "F", [1, 5], "E5"], ["A", "B", [2, 3], "B2"]],
+  [["D", "E", [2, 3], "D3"], ["C", "F", [2, 3], "C2"], ["D", "B", [4, 5], "D4"], ["E", "F", [4, 5], "E4"]],
+  [["A", "C", [4, 5], "C4"], ["A", "E", [1, 3], "E1"], ["B", "C", [1, 3], "B3"], ["F", "D", [1, 3], "D1"]],
+  [["B", "E", [2, 5], "B2"], ["A", "F", [2, 5], "F5"], ["C", "D", [2, 5], "D2"], ["B", "C", [1, 4], "B4"]],
+  [["A", "E", [1, 4], "A4"], ["F", "D", [1, 4], "F1"], ["E", "F", [2, 3], "E3"], ["A", "C", [2, 3], "C3"]],
+  [["D", "B", [2, 3], "D3"], ["E", "C", [1, 5], "E5"], ["A", "D", [1, 5], "D5"], ["F", "B", [1, 5], "B5"]],
+  [["E", "C", [2, 4], "E2"], ["F", "B", [2, 4], "F4"], ["A", "D", [2, 4], "A2"], ["A", "E", [3, 5], "A3"]],
+  [["F", "D", [3, 5], "F3"], ["B", "C", [3, 5], "C5"], ["F", "B", [1, 4], "B1"], ["A", "D", [1, 4], "A1"]],
+  [["A", "E", [2, 5], "A5"], ["E", "C", [1, 4], "C1"], ["B", "C", [2, 5], "C2"], ["F", "D", [2, 5], "F2"]],
 ];
 
 export type LeagueFixture = {
