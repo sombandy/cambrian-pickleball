@@ -1,5 +1,5 @@
 import { scoringDatabase } from "@/lib/tournament12/database";
-import { signedInEditorId } from "@/lib/tournament12/editor-auth";
+import { signedInEditor } from "@/lib/tournament12/editor-auth";
 import {
   loadTournament,
   saveTournament,
@@ -30,8 +30,8 @@ export async function POST(request: Request) {
     allowed.push(new URL(process.env.NEXT_PUBLIC_APP_URL).origin);
   if (origin && !allowed.includes(origin))
     return reply({ error: "NOT_EDITOR" }, 403);
-  const userId = await signedInEditorId();
-  if (!userId) return reply({ error: "NOT_EDITOR" }, 403);
+  const editor = await signedInEditor();
+  if (!editor) return reply({ error: "NOT_EDITOR" }, 403);
   try {
     // Bounded streaming read: do not trust Content-Length or accept arbitrary state snapshots.
     const reader = request.body?.getReader();
@@ -60,7 +60,10 @@ export async function POST(request: Request) {
     } catch {
       return reply({ error: "INVALID_DATA" }, 422);
     }
-    return reply(await saveTournament(scoringDatabase(), input, userId));
+    // The history records the name on the signed-in account, not one typed in the browser.
+    if (input && typeof input === "object" && !Array.isArray(input))
+      input = { ...input, editor: editor.name };
+    return reply(await saveTournament(scoringDatabase(), input, editor.id));
   } catch (error) {
     if (error instanceof ScoringError)
       return reply({ error: error.code }, error.status);

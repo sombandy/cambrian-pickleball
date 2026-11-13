@@ -42,7 +42,7 @@ Without a database, the live scoreboard reports a connection problem and disable
 
 The browser sends an action, expected revision and unique operation ID to a same-origin Next.js API. The server verifies the Clerk session and explicit editor allowlist, validates the action, and computes the new state using the same tournament rules as the UI. Client-supplied state snapshots are rejected.
 
-A PostgreSQL transaction locks the tournament row. The new state, revision and before/after audit are committed together. Each operation ID is unique, so a timeout can safely be checked again without duplicating a result. The audit records both the authenticated Clerk account ID and the operator's self-reported name.
+A PostgreSQL transaction locks the tournament row. The new state, revision and before/after audit are committed together. Each operation ID is unique, so a timeout can safely be checked again without duplicating a result. The audit records the authenticated Clerk account ID and the name on that account; scorers are not asked to type a name.
 
 If another editor saves first, the stale write is rejected and the app asks the user to review the latest state. An uncertain save is retained on the device and blocks further edits until **Check save** resolves it. Offline clients can inspect cached scores and retain form drafts; they cannot confirm or queue new live results while disconnected. Scores refresh every 15 seconds while visible, and on focus/reconnection.
 
