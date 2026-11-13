@@ -11,7 +11,7 @@ The suite covers all 625 score combinations from 0–24 in both orientations, ra
 Use a **separate staging database** for live acceptance, with the same Railway application configuration. Keep test scores out of the real tournament. Do not reset or drop the existing community database.
 
 1. **Public viewing and permissions:** Open the live Scores URL in a signed-out browser. Verify standings and lineups load, with no score-entry controls. Sign in as an ordinary Clerk account: still read-only. Sign in with an email listed in `lib/tournament12/editors.ts`: entry controls appear. Remove that email from the list, redeploy, and verify a direct POST and UI save are denied. An empty list must deny every write. Confirm the existing feedback/admin/players/rules pages still work.
-2. **Shared saving:** Use two devices. On one save Game 1 at 21–14; verify the other updates within 15 seconds or on refresh. The winner gets 3 win-points and +7 PD, the loser 0 and −7. Correct to 21–15: bonus disappears, winner gets 2 points and +6 PD. Refresh/reopen both devices: the correction remains.
+2. **Shared saving and visible results:** Use two devices. On one save Game 1 at 21–14; tap **View results** in the save confirmation. Verify it leaves the upcoming Games queue and appears first in **Results**, with both final scores and the winner marked. Open Results on the other device as a signed-out player; it should update within 15 seconds or on refresh, with no editing controls. The winner gets 3 win-points and +7 PD. Correct to 21–15 through Results as an editor: the bonus disappears and the winner gets 2 points and +6 PD. Refresh/reopen both devices: the correction remains. Check search, team and round filters, **Show more results**, and that league results remain accessible after advancing to playoffs through the default **All rounds** view.
 3. **Invalid scores and typos:** Try blank, negative, decimal, scientific notation, letters, a pasted sentence, 24–22, 21–20, 22–21, and tied scores. None may save. Verify 21–0, 21–19, 22–20, 23–21, and 23–22 save in either orientation. Check the team/winner preview before saving. Name is required for every operation.
 4. **Lost connection:** Type an unsaved entry, switch to airplane mode, and try saving. It must never claim Saved. Restore the network and refresh. Interrupt a request immediately after tapping Save; if it is unconfirmed, reload the browser and tap **Check save**. Exactly one result/revision/audit event must exist. The pending save must block another save until resolved. Cached data must be marked stale/offline.
 5. **Concurrent correction:** Load the same revision on two devices. Save on the first, then immediately save from the second before refreshing it. The second should be asked to review the newer state. Confirm neither result disappears. If polling refreshed the second already, test with its network request paused before releasing it.
@@ -40,3 +40,11 @@ Local automation tests PostgreSQL semantics in PGlite, not Railway networking or
 ![Phone standings](qa/scoring-phone.jpg)
 
 ![Tablet games](qa/scoring-tablet.jpg)
+
+## Results visibility verification — November 13, 2026
+
+- Synced with Som's main at `6dc898d` before implementing the Results tab.
+- 45 tests pass, including four rendered-interface regressions for public result visibility, latest-save/correction ordering, prior-round results with phase-specific editing, and the empty state. Lint, type checking and production build pass.
+- Browser practice check: saved Game 4 as 23–22, used **View results**, then verified it appeared first as a read-only player and remained after reload. Team filtering and game search both worked. No horizontal overflow at 320px or 768px; all five mobile navigation buttons exceeded 44px in width.
+
+![Public Results on a phone](qa/results-phone.jpg)

@@ -1921,3 +1921,26 @@
 .scoreboard .viewer-hint svg {
   flex-shrink: 0;
 }
+
+/* Games and Results each have search and team filters; round is below them. */
+.scoreboard .filter-bar {
+  grid-template-columns: minmax(0, 1fr) 145px;
+}
+.scoreboard .toast {
+  max-width: calc(100vw - 24px);
+  padding: 8px 12px;
+}
+.scoreboard .toast button {
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 650;
+}
+@media (max-width: 599px) {
+  .scoreboard .filter-bar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
