@@ -318,6 +318,10 @@ function OpenLeagueTable({
         </table>
       </div>
       <p className="text-xs text-muted">* Back-to-back player in the tentative schedule.</p>
+      <div className="mt-2 grid gap-2">
+        <h3 className="font-semibold text-ink">Pacing you can count on</h3>
+        <Intro items={LEAGUE_PACING} />
+      </div>
     </>
   );
 }
@@ -346,6 +350,21 @@ const LEAGUE_INTRO = [
   <><Label>Lead:</Label> when your game is up, gather the other three players and take the empty court.</>,
   <><Label>Everyone leads twice:</Label> once in games 1–30 and once in 31–60.</>,
   <><Label>No referees:</Label> honor code; if the teams disagree on a call, replay the point.</>,
+];
+
+// Players whose first game is later than the second batch, e.g. "Rajan and Shivesh".
+const LATE_STARTERS = TEAMS.flatMap((team) =>
+  POSITIONS.filter((position) => TENTATIVE_LEAGUE_STARTS[leagueFixturesFor(team, position)[0].priority - 1].batch > 1)
+    .map((position) => playerName(team, position)),
+).join(" and ");
+
+// Guarantees of the Open Courts queue order (see OPEN_COURTS in schedule.ts).
+const LEAGUE_PACING = [
+  <><Label>No three in a row:</Label> nobody plays in three consecutive {SLOT_MINUTES}-minute rounds.</>,
+  <><Label>Back-to-backs are shared:</Label> at most two per player (marked *), and there are always at least four other games between two of yours.</>,
+  <><Label>No long waits:</Label> you never sit out more than about {2 * SLOT_MINUTES} minutes between games.</>,
+  <><Label>Early start for all:</Label> everyone&apos;s first game is in the first two rounds{LATE_STARTERS && <>, except {LATE_STARTERS}, who start in the third</>}.</>,
+  <><Label>Play to the end:</Label> everyone still has a game in the final hour of the league.</>,
 ];
 
 const PLAYOFF_INTRO = [
