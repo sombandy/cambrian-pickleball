@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { UserButton, useAuth } from "@clerk/nextjs";
 import { Home, Menu, X } from "lucide-react";
 
 import {
@@ -23,7 +24,30 @@ function isActive(pathname: string | null, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function SiteHeader() {
+// Site-wide account control: a Sign in link when signed out, the Clerk avatar menu (with Sign out) when signed in.
+function AccountControl({ pathname }: { pathname: string | null }) {
+  const { isLoaded, isSignedIn } = useAuth();
+
+  if (!isLoaded) return null;
+  if (isSignedIn) {
+    return (
+      <UserButton
+        appearance={{ elements: { userButtonAvatarBox: "h-10 w-10" } }}
+      />
+    );
+  }
+  if (pathname?.startsWith("/sign-")) return null;
+  return (
+    <Link
+      href={`/sign-in?redirect_url=${encodeURIComponent(pathname ?? "/")}`}
+      className="secondary-button rounded-full px-4 py-2.5 text-sm font-medium"
+    >
+      Sign in
+    </Link>
+  );
+}
+
+export function SiteHeader({ accountEnabled }: { accountEnabled: boolean }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -47,59 +71,64 @@ export function SiteHeader() {
           <Home className="h-[18px] w-[18px]" />
         </Link>
 
-        <div className="relative">
-          <button
-            type="button"
-            aria-label={open ? "Close menu" : "Open menu"}
-            aria-expanded={open}
-            aria-haspopup="menu"
-            onClick={() => setOpen((value) => !value)}
-            className="soft-button inline-flex h-10 w-10 items-center justify-center rounded-full"
-          >
-            {open ? (
-              <X className="h-[18px] w-[18px]" />
-            ) : (
-              <Menu className="h-[18px] w-[18px]" />
-            )}
-          </button>
+        <div className="flex items-center gap-3">
+          {accountEnabled ? <AccountControl pathname={pathname} /> : null}
+          <div className="relative">
+            <button
+              type="button"
+              aria-label={open ? "Close menu" : "Open menu"}
+              aria-expanded={open}
+              aria-haspopup="menu"
+              onClick={() => setOpen((value) => !value)}
+              className="soft-button inline-flex h-10 w-10 items-center justify-center rounded-full"
+            >
+              {open ? (
+                <X className="h-[18px] w-[18px]" />
+              ) : (
+                <Menu className="h-[18px] w-[18px]" />
+              )}
+            </button>
 
-          {open ? (
-            <>
-              <button
-                type="button"
-                aria-hidden
-                tabIndex={-1}
-                onClick={() => setOpen(false)}
-                className="fixed inset-0 z-10 cursor-default bg-transparent"
-              />
-              <nav
-                role="menu"
-                aria-label="Site navigation"
-                className="absolute right-0 top-12 z-20 w-60 overflow-hidden rounded-2xl border border-outline/80 bg-white/96 shadow-[0_28px_50px_-30px_rgba(30,38,19,0.32)] backdrop-blur"
-              >
-                <ul className="grid">
-                  {navItems.map((item) => {
-                    const active = isActive(pathname, item.href);
-                    return (
-                      <li key={item.href}>
-                        <Link
-                          href={item.href}
-                          role="menuitem"
-                          aria-current={active ? "page" : undefined}
-                          onClick={() => setOpen(false)}
-                          className={`block px-4 py-3 text-[0.98rem] font-medium transition hover:bg-court-soft/70 ${
-                            active ? "bg-court-soft/60 text-court" : "text-ink"
-                          }`}
-                        >
-                          {item.label}
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </nav>
-            </>
-          ) : null}
+            {open ? (
+              <>
+                <button
+                  type="button"
+                  aria-hidden
+                  tabIndex={-1}
+                  onClick={() => setOpen(false)}
+                  className="fixed inset-0 z-10 cursor-default bg-transparent"
+                />
+                <nav
+                  role="menu"
+                  aria-label="Site navigation"
+                  className="absolute right-0 top-12 z-20 w-60 overflow-hidden rounded-2xl border border-outline/80 bg-white/96 shadow-[0_28px_50px_-30px_rgba(30,38,19,0.32)] backdrop-blur"
+                >
+                  <ul className="grid">
+                    {navItems.map((item) => {
+                      const active = isActive(pathname, item.href);
+                      return (
+                        <li key={item.href}>
+                          <Link
+                            href={item.href}
+                            role="menuitem"
+                            aria-current={active ? "page" : undefined}
+                            onClick={() => setOpen(false)}
+                            className={`block px-4 py-3 text-[0.98rem] font-medium transition hover:bg-court-soft/70 ${
+                              active
+                                ? "bg-court-soft/60 text-court"
+                                : "text-ink"
+                            }`}
+                          >
+                            {item.label}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </nav>
+              </>
+            ) : null}
+          </div>
         </div>
       </div>
     </header>

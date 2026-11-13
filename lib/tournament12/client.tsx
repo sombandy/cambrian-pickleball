@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { SignInButton, useAuth, useClerk, useUser } from "@clerk/nextjs";
+import Link from "next/link";
+import { useAuth, useUser } from "@clerk/nextjs";
 import { Desk } from "./ui";
 import { TournamentStore, practiceBackend } from "./store";
 import { httpBackend } from "./http-backend";
@@ -84,8 +85,10 @@ function Live({
   authControl,
   editor = false,
   signedInName,
+  viewerHint,
 }: {
-  authControl: React.ReactNode;
+  authControl?: React.ReactNode;
+  viewerHint?: React.ReactNode;
   editor?: boolean;
   signedInName?: string;
 }) {
@@ -100,13 +103,13 @@ function Live({
       editor={editor}
       auth={authControl}
       signedInName={signedInName}
+      viewerHint={viewerHint}
       draftScope="railway:12"
     />
   );
 }
 function AuthenticatedLive() {
   const { isLoaded, isSignedIn, userId } = useAuth();
-  const { signOut } = useClerk();
   const { user } = useUser();
   // Same rule as the server (editor-auth.ts): account name, else the email's local part.
   const signedInName =
@@ -140,17 +143,16 @@ function AuthenticatedLive() {
     <Live
       editor={!!isSignedIn && editor}
       signedInName={isSignedIn ? signedInName : undefined}
-      authControl={
-        isSignedIn ? (
-          <button className="button quiet" onClick={() => void signOut()}>
-            Sign out
-          </button>
-        ) : (
-          <SignInButton mode="modal">
-            <button className="button secondary" disabled={!isLoaded}>
-              Editor sign in
-            </button>
-          </SignInButton>
+      viewerHint={
+        isLoaded &&
+        !isSignedIn && (
+          <>
+            Organizers and team captains:{" "}
+            <Link href="/sign-in?redirect_url=%2Ftournament%2F12%2Fscores">
+              sign in
+            </Link>{" "}
+            with your Gmail account to enter scores.
+          </>
         )
       }
     />

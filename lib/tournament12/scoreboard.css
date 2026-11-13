@@ -157,24 +157,6 @@
   gap: 14px;
   border-bottom: 1px solid var(--line);
 }
-.scoreboard .brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.scoreboard .brand strong {
-  font-family: var(--font-display-source), sans-serif;
-  display: block;
-  letter-spacing: 0.16em;
-  font-size: 1rem;
-  font-weight: 800;
-}
-.scoreboard .brand small {
-  display: block;
-  font-size: 0.75rem;
-  color: var(--muted);
-  margin-top: 2px;
-}
 .scoreboard .brand-mark {
   position: relative;
   background: var(--green);
@@ -269,13 +251,6 @@
   text-decoration: underline;
   text-underline-offset: 4px;
 }
-.scoreboard .text-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 0.85rem;
-  text-decoration: none;
-}
 .scoreboard .app-layout {
   display: grid;
   grid-template-columns: 210px minmax(0, 1fr);
@@ -318,18 +293,6 @@
   color: var(--green);
   background: var(--pale);
   font-weight: 700;
-}
-.scoreboard .venue-note {
-  margin: 62px 0 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 0.84rem;
-  color: var(--muted);
-  line-height: 1.5;
-}
-.scoreboard .venue-note strong {
-  color: var(--ink);
 }
 .scoreboard .main-content {
   min-width: 0;
@@ -994,40 +957,6 @@
   flex-wrap: wrap;
   font-size: 0.8rem;
 }
-.scoreboard .roster-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
-}
-.scoreboard .roster-panel {
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 9px;
-  padding: 20px;
-}
-.scoreboard .roster-heading {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-.scoreboard .roster-heading h3 {
-  font-size: 1rem;
-}
-.scoreboard .roster-heading .text-button {
-  margin-left: auto;
-  font-size: 0.75rem;
-}
-.scoreboard .name-field {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 10px 0;
-  font-size: 0.78rem;
-  color: var(--muted);
-}
-.scoreboard .name-field input {
-  width: 100%;
-}
 .scoreboard .export-panel {
   display: flex;
   gap: 20px;
@@ -1162,23 +1091,11 @@
   .scoreboard .filter-bar {
     grid-template-columns: minmax(0, 1fr) 120px 110px;
   }
-  .scoreboard .roster-grid {
-    grid-template-columns: 1fr;
-  }
 }
 @media (max-width: 767px) {
   .scoreboard .site-header {
     min-height: 88px;
     padding: 18px 20px;
-  }
-  .scoreboard .brand {
-    gap: 10px;
-  }
-  .scoreboard .brand strong {
-    font-size: 0.87rem;
-  }
-  .scoreboard .brand small {
-    font-size: 0.63rem;
   }
   .scoreboard .brand-mark {
     width: 32px;
@@ -1570,12 +1487,6 @@
     gap: 2px 18px;
     font-size: 0.77rem;
   }
-  .scoreboard .roster-grid {
-    gap: 14px;
-  }
-  .scoreboard .roster-panel {
-    padding: 17px;
-  }
   .scoreboard .plain-details {
     font-size: 0.81rem;
   }
@@ -1627,9 +1538,6 @@
   .scoreboard .search-field {
     grid-column: auto;
   }
-  .scoreboard .roster-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 @media (max-width: 359px) {
   .scoreboard .app-layout {
@@ -1639,12 +1547,6 @@
   .scoreboard .site-header {
     padding-left: 13px;
     padding-right: 13px;
-  }
-  .scoreboard .brand small {
-    font-size: 0.59rem;
-  }
-  .scoreboard .brand strong {
-    font-size: 0.81rem;
   }
   .scoreboard .game-summary {
     grid-template-columns: minmax(0, 1fr) 88px;
@@ -1742,154 +1644,18 @@
     padding-bottom: 18px;
   }
 }
-.scoreboard .tournament-art {
-  width: 60px;
-  height: 60px;
-  object-fit: contain;
-  border-radius: 7px;
-  flex-shrink: 0;
-}
-@media (max-width: 767px) {
-  .scoreboard .tournament-art {
-    width: 45px;
-    height: 45px;
-  }
-  .scoreboard .brand small {
-    max-width: 145px;
-    line-height: 1.4;
-  }
-}
 .scoreboard .score-help {
   font-size: 0.72rem;
   color: var(--muted);
   margin-top: 12px;
   line-height: 1.6;
 }
-.scoreboard .team-directory {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
-  margin: 24px 0 32px;
-}
-.scoreboard .named-team {
-  min-width: 0;
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 9px;
-  padding: 20px;
-}
-.scoreboard .named-team-header {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-  padding-bottom: 18px;
-  border-bottom: 1px solid var(--line);
-}
-.scoreboard .team-logo-link {
-  display: block;
-  width: 96px;
-  height: 96px;
-  flex-shrink: 0;
-  border-radius: 6px;
-  background: #fffffc;
-  overflow: hidden;
-}
-.scoreboard .team-logo {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-.scoreboard .named-team-header > div {
-  min-width: 0;
-}
-.scoreboard .named-team-header h3 {
-  font-size: 1.03rem;
-  overflow-wrap: anywhere;
-  line-height: 1.4;
-}
-.scoreboard .named-team-header p {
-  font-size: 0.79rem;
-  line-height: 1.5;
-  margin-top: 9px;
-  overflow-wrap: anywhere;
-}
-.scoreboard .named-team-header p > span {
-  display: block;
-  color: var(--muted);
-  font-size: 0.67rem;
-  margin-bottom: 2px;
-}
-.scoreboard .member-list {
-  list-style: none;
-  padding: 8px 0 0;
-  margin: 0;
-}
-.scoreboard .member-list li {
-  display: flex;
-  gap: 10px;
-  align-items: baseline;
-  justify-content: space-between;
-  padding: 11px 0;
-  border-bottom: 1px solid #edf0e6;
-  line-height: 1.5;
-  font-size: 0.84rem;
-}
-.scoreboard .member-list li:last-child {
-  border-bottom: 0;
-  padding-bottom: 0;
-}
-.scoreboard .member-list li > span {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-.scoreboard .member-list small {
-  font-size: 0.64rem;
-  color: var(--green);
-  background: var(--pale);
-  border-radius: 4px;
-  padding: 3px 6px;
-  white-space: nowrap;
-}
 .scoreboard .assignment-notice {
   font-size: 0.8rem;
 }
-@media (max-width: 1050px) {
-  .scoreboard .team-directory {
-    grid-template-columns: 1fr;
-  }
-}
 @media (max-width: 767px) {
-  .scoreboard .team-directory {
-    gap: 15px;
-  }
-  .scoreboard .named-team {
-    padding: 17px;
-  }
-  .scoreboard .named-team-header {
-    gap: 15px;
-  }
-  .scoreboard .team-logo-link {
-    width: 86px;
-    height: 86px;
-  }
-  .scoreboard .named-team-header h3 {
-    font-size: 1.02rem;
-  }
-  .scoreboard .member-list li {
-    font-size: 0.85rem;
-  }
   .scoreboard .assignment-notice {
     font-size: 0.77rem;
-  }
-}
-@media (min-width: 600px) and (max-width: 767px) {
-  .scoreboard .team-directory {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .scoreboard .named-team-header {
-    flex-direction: column;
-    align-items: flex-start;
   }
 }
 /* Diwali accents: a quiet toran, warm paper, and a small diya away from score controls. */
@@ -1977,11 +1743,6 @@
   width: 32px;
   min-width: 32px;
   height: 32px;
-}
-.scoreboard .roster-heading h3 small {
-  font-size: 0.7rem;
-  font-weight: 400;
-  color: var(--muted);
 }
 .scoreboard .filter-bar {
   grid-template-columns: minmax(0, 1fr) 145px 120px;
@@ -2101,31 +1862,6 @@
   margin: 12px 0;
   overflow-wrap: anywhere;
 }
-.scoreboard .brand {
-  min-width: 0;
-  flex: 1;
-}
-.scoreboard .brand > div {
-  min-width: 0;
-}
-.scoreboard .brand strong {
-  letter-spacing: 0.04em;
-}
-.scoreboard .brand small {
-  line-height: 1.4;
-}
-.scoreboard .member-list .member-position {
-  flex: 0 0 24px;
-  font-size: 0.72rem;
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
-}
-.scoreboard .member-list .member-name {
-  flex: 1;
-}
-.scoreboard .member-list li {
-  justify-content: flex-start;
-}
 
 .scoreboard {
   border-radius: 20px;
@@ -2138,9 +1874,6 @@
 }
 .scoreboard .site-header {
   padding: 24px 18px;
-}
-.scoreboard .brand strong {
-  letter-spacing: 0.04em;
 }
 .scoreboard .practice-tools {
   margin: 12px 18px;
@@ -2169,4 +1902,22 @@
 
 .scoreboard .main-content {
   scroll-margin-top: 80px;
+}
+
+/* The tournament title and artwork live in the shared page header; this bar only holds the practice-mode controls. */
+.scoreboard .site-header {
+  min-height: 0;
+  justify-content: flex-end;
+}
+/* Sign-in lives in the site header; without a control here only the trim remains. */
+.scoreboard .site-header.trim-only {
+  padding: 18px 0 0;
+  border-bottom: 0;
+}
+.scoreboard .viewer-hint {
+  background: transparent;
+  color: var(--muted);
+}
+.scoreboard .viewer-hint svg {
+  flex-shrink: 0;
 }
