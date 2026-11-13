@@ -121,16 +121,18 @@ test("raw input rejects blanks, decimal, scientific, signed, and pasted malforme
   assert.equal(scoreInputError("15", "14", true), null);
 });
 test("standings count points/differential and score corrections replace previous totals", () => {
+  // Use whichever teams open the published queue, so reordering games never breaks this.
+  const { a: home, b: away } = LEAGUE[0];
   let s = act(initialTournament(), { type: "score", id: "L1", a: 21, b: 14 });
-  const d = standings(s).find((r) => r.team === "D")!;
+  const d = standings(s).find((r) => r.team === home)!;
   assert.deepEqual(
     [d.played, d.wins, d.points, d.pd, d.bonus],
     [1, 1, 3, 7, 1],
   );
   s = act(s, { type: "score", id: "L1", a: 18, b: 21 });
   const updated = standings(s);
-  assert.equal(updated.find((r) => r.team === "D")!.points, 0);
-  assert.equal(updated.find((r) => r.team === "E")!.points, 2);
+  assert.equal(updated.find((r) => r.team === home)!.points, 0);
+  assert.equal(updated.find((r) => r.team === away)!.points, 2);
   assert.equal(
     updated.reduce((v, r) => v + r.pd, 0),
     0,

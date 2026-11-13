@@ -1,12 +1,9 @@
-import { auth } from "@clerk/nextjs/server";
-import { clerkEnabled } from "@/lib/clerk-enabled";
-import { editorAllowed } from "@/lib/tournament12/protocol";
+import { signedInEditorId } from "@/lib/tournament12/editor-auth";
 
 export const dynamic = "force-dynamic";
 export async function GET() {
-  const { userId } = clerkEnabled ? await auth() : { userId: null };
   return Response.json(
-    { canEdit: editorAllowed(userId) },
+    { canEdit: (await signedInEditorId()) !== null },
     { headers: { "Cache-Control": "no-store" } },
   );
 }

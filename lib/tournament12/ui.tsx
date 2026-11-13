@@ -27,6 +27,7 @@ import {
 import {
   gamesFor,
   LEAGUE,
+  playerFirstName,
   playerName,
   resultsCsv,
   scoreInputError,
@@ -735,7 +736,7 @@ function GameRow({
 }) {
   const r = s.results[g.id];
   const lead = g.lead
-    ? playerName(s, g.lead[0] as Team, Number(g.lead.slice(1)))
+    ? playerFirstName(s, g.lead[0] as Team, Number(g.lead.slice(1)))
     : "";
   return (
     <article className={`game-row ${open ? "expanded" : ""}`}>
@@ -757,7 +758,9 @@ function GameRow({
                   {identity(t).abbreviation}
                 </strong>
                 <span>
-                  {g.pair.map((p) => playerName(s, t, p, g.phase)).join(" + ")}
+                  {g.pair
+                    .map((p) => playerFirstName(s, t, p, g.phase))
+                    .join(" + ")}
                 </span>
               </div>
               <span

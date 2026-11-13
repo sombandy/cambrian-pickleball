@@ -5,7 +5,7 @@ The app is part of the existing Next.js site at `/tournament/12/scores`. No Supa
 ## Owner's deployment steps
 
 1. Keep the existing `DATABASE_URL`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY`. Use the same Clerk application as the rest of this website.
-2. Set `TOURNAMENT_EDITOR_USER_IDS` to the shared editor account's Clerk **user ID** (`user_...`, available in Clerk Dashboard → Users → select the account). Multiple IDs can be separated by commas. Site admin access does not automatically grant scoring access. If this variable is blank, **all score writes are denied**.
+2. Add each scorer's email to `EDITOR_EMAILS` in `lib/tournament12/editors.ts` and deploy. A person can save scores only when signed in with a Clerk account that has verified one of those emails. Site admin access does not automatically grant scoring access. If the list is empty, **all score writes are denied**. The repository is public, so listed emails are publicly visible.
 3. Set `NEXT_PUBLIC_APP_URL` to the site's actual HTTPS origin. Ensure that domain is allowed in the existing Clerk application.
 4. Install/build with Node 22 and the pinned pnpm 10: `pnpm install --frozen-lockfile`, then `pnpm build`. Railway should provide the `NEXT_PUBLIC_*` variables during the build, as with the existing site.
 5. Set Railway's **pre-deploy command** to `pnpm db:migrate`. This applies the committed `0002` migration, adding `tournament12_state` and `tournament12_operations`. It does not change or reset feedback data. Keep the existing start command (`pnpm start`); Next.js reads Railway's `PORT` automatically. Do not generate a fresh migration on the server.
@@ -42,11 +42,11 @@ Without a database, the live scoreboard reports a connection problem and disable
 
 The browser sends an action, expected revision and unique operation ID to a same-origin Next.js API. The server verifies the Clerk session and explicit editor allowlist, validates the action, and computes the new state using the same tournament rules as the UI. Client-supplied state snapshots are rejected.
 
-A PostgreSQL transaction locks the tournament row. The new state, revision and before/after audit are committed together. Each operation ID is unique, so a timeout can safely be checked again without duplicating a result. The audit records both the authenticated shared account ID and the operator's self-reported name. It is not proof of individual identity when people share an account.
+A PostgreSQL transaction locks the tournament row. The new state, revision and before/after audit are committed together. Each operation ID is unique, so a timeout can safely be checked again without duplicating a result. The audit records both the authenticated Clerk account ID and the operator's self-reported name.
 
 If another editor saves first, the stale write is rejected and the app asks the user to review the latest state. An uncertain save is retained on the device and blocks further edits until **Check save** resolves it. Offline clients can inspect cached scores and retain form drafts; they cannot confirm or queue new live results while disconnected. Scores refresh every 15 seconds while visible, and on focus/reconnection.
 
-Published fixture numbers correspond directly to the scorer's internal keys: published L01 = stored/exported L1, through L60. The scorer imports the site's published fixture array instead of maintaining a second schedule. Both the existing Players page and the scorer use the supplied official roster directory.
+Published fixture numbers correspond directly to the scorer's internal keys: published L01 = stored/exported L1, through L60. The game order is defined once, in `app/tournament/12/league-games.ts`, and both the published schedule and the scorer read it. Do not reorder games after scoring has started: saved results are keyed by game number. Both the existing Players page and the scorer use the supplied official roster directory.
 
 Score corrections are permitted only in the current active round. Advancing locks the earlier round. Position swaps preserve original league identities and have a maximum of two swaps per team across playoffs. Download a backup before advancing. Corrections to a locked round require organizer review and database restoration/recovery, not an automatic rewrite of a bracket already being played.
 

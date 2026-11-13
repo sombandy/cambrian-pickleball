@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import ExcelJS from "exceljs";
 import { HyperFormula } from "hyperformula";
 import { workbookSheets } from "./export";
-import { applyAction, initialTournament } from "./domain";
+import { applyAction, initialTournament, LEAGUE } from "./domain";
+import { teamDisplay } from "./team-directory";
 
 test("workbook includes 60 editable fixtures, formula standings, phase rosters, and Unicode names", async () => {
   let s = initialTournament();
@@ -47,7 +48,7 @@ test("workbook includes 60 editable fixtures, formula standings, phase rosters, 
   assert.equal(directory.getCell("D5").value, "Captain");
   assert.equal(
     loaded.getWorksheet("Scores")!.getCell("O2").value,
-    "Patakha Paddles",
+    teamDisplay(LEAGUE[0].a).name,
   );
   assert.equal(
     loaded.getWorksheet("League roster")!.getCell("C17").value,
@@ -95,10 +96,10 @@ test("backup formulas independently recalculate bonus, winner, and PD after manu
       standingsId = engine.getSheetId("Standings")!;
     const dRow = sheets
       .find((s) => s.name === "Standings")!
-      .rows.findIndex((r) => r[0] === "D");
+      .rows.findIndex((r) => r[0] === LEAGUE[0].a);
     const eRow = sheets
       .find((s) => s.name === "Standings")!
-      .rows.findIndex((r) => r[0] === "E");
+      .rows.findIndex((r) => r[0] === LEAGUE[0].b);
     const cell = (row: number, col: number) =>
       engine.getCellValue({ sheet: standingsId, row, col });
     assert.equal(cell(dRow, 5), 3);

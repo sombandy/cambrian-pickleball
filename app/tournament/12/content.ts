@@ -1,4 +1,4 @@
-import { TEAM_DIRECTORY, leaguePlayerNames } from '@/lib/tournament12/team-directory';
+import { TEAM_DIRECTORY, firstName, leaguePlayerNames } from '@/lib/tournament12/team-directory';
 import { getTournamentFeedbackPath, getTournamentPath } from "@/lib/tournaments";
 
 import { TEAMS, type Team } from "./schedule";
@@ -39,6 +39,6 @@ export const PLAYERS = Object.values(TEAM_ROSTERS).flat();
 export const teamNumber = (team: Team) => TEAMS.indexOf(team) + 1;
 
 // First name of a team's player at a 1-based lineup position. First names are unique across the tournament.
-export const playerName = (team: Team, position: number) => TEAM_ROSTERS[team][position - 1].split(" ")[0];
+export const playerName = (team: Team, position: number) => firstName(TEAM_ROSTERS[team][position - 1]);
 
 export const WAITLIST: string[] = [];
