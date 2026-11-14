@@ -93,7 +93,7 @@ function Live({
   signedInName?: string;
 }) {
   const store = useMemo(
-    () => new TournamentStore(httpBackend(), localStorage, "railway:12"),
+    () => new TournamentStore(httpBackend(), localStorage, "railway:12:v2"),
     [],
   );
   return (
