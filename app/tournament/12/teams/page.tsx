@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 
 import { TournamentSectionCard } from "@/components/tournament-section-card";
-import { TEAM_DIRECTORY } from "@/lib/tournament12/team-directory";
+import { rosterDisplayName, TEAM_DIRECTORY } from "@/lib/tournament12/team-directory";
 import { getInitials } from "@/lib/utils";
 
 import { PLAYERS, WAITLIST } from "../content";
@@ -68,7 +68,7 @@ export default function TournamentTwelveTeamsPage() {
                       P{idx + 1}
                     </span>
                     <span className="min-w-0 flex-1 truncate text-[0.95rem] font-medium text-ink">
-                      {name}
+                      {rosterDisplayName(name)}
                     </span>
                     {name === team.captainMemberName && (
                       <span className="rounded-md bg-court-soft px-1.5 py-0.5 text-[0.65rem] font-semibold text-court">

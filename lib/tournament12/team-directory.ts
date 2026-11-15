@@ -117,3 +117,11 @@ export function leaguePlayerNames(): Record<TeamCode, string[]> {
     TEAM_DIRECTORY.map((t) => [t.scheduleLetter, [...t.members]]),
   ) as Record<TeamCode, string[]>;
 }
+
+// Roster-only labels for the Champions and Teams tabs. Vijay replaced the injured Ankit
+// partway through; scores and the schedule still key off the registered member name.
+const ROSTER_DISPLAY_NAMES: Record<string, string> = {
+  "Ankit Agarwal": "Ankit/Vijay",
+};
+export const rosterDisplayName = (memberName: string) =>
+  ROSTER_DISPLAY_NAMES[memberName] ?? memberName;
