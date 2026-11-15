@@ -6,6 +6,7 @@ import { TEAMS, type Team } from "./schedule";
 export const TOURNAMENT_SLUG = "12";
 export const TOURNAMENT_PATH = getTournamentPath(TOURNAMENT_SLUG);
 export const FEEDBACK_PATH = getTournamentFeedbackPath(TOURNAMENT_SLUG);
+export const CHAMPIONS_PATH = `${TOURNAMENT_PATH}/champions`;
 export const TEAMS_PATH = `${TOURNAMENT_PATH}/teams`;
 export const RULES_PATH = `${TOURNAMENT_PATH}/rules`;
 
@@ -22,6 +23,7 @@ export const VENUE = {
 
 // Add new sections (e.g. Format) here; the tab bar picks them up.
 export const SECTIONS = [
+  { label: "Champions", href: CHAMPIONS_PATH },
   { label: "Scores", href: `${TOURNAMENT_PATH}/scores` },
   { label: "Teams", href: TEAMS_PATH },
   { label: "Rules", href: RULES_PATH },

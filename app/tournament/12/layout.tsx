@@ -34,13 +34,13 @@ export default function TournamentTwelveLayout({
 
         <div className="relative flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-7">
           <Image
-            unoptimized
             priority
-            className="h-20 w-20 shrink-0 rounded-2xl object-contain sm:h-28 sm:w-28"
-            src="/tournament12/tournament-art.png"
-            alt={`${TOURNAMENT_TITLE} artwork`}
-            width={112}
-            height={112}
+            className="aspect-[16/9] w-full shrink-0 rounded-2xl border border-outline/80 object-cover sm:w-64"
+            src="/images/tournaments/12/participants.jpg"
+            alt={`Participants of the ${TOURNAMENT_TITLE} gathered on court`}
+            width={1600}
+            height={900}
+            sizes="(min-width: 640px) 256px, 100vw"
           />
           <div className="min-w-0 max-w-2xl">
             <span className="inline-flex rounded-full border border-court/15 bg-court-soft px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-court sm:text-xs">

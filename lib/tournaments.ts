@@ -66,6 +66,12 @@ const tournaments: Tournament[] = [
     statusLabel: "Upcoming",
     organizers: "Prabhu, Shivesh and Som",
     upcomingTimeframe: "November 14",
+    previewImage: {
+      src: "/images/tournaments/12/participants.jpg",
+      alt: "Participants of the 12th Cambrian Pickleball Tournament gathered on court at Ace Pickleball Club.",
+      width: 1600,
+      height: 900,
+    },
     customPage: true,
     hasFeedbackBoard: true,
   },
