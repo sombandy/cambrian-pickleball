@@ -99,25 +99,6 @@ export default function TournamentTwelveChampionsPage() {
           />
         </div>
       </TournamentSectionCard>
-
-      <section className="surface-card overflow-hidden rounded-[34px] p-3 sm:p-4">
-        <div className="mb-3 px-2 pt-1">
-          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-court">
-            Participants
-          </p>
-          <p className="mt-1 text-sm text-muted">Full tournament group on court</p>
-        </div>
-        <div className="overflow-hidden rounded-[30px] border border-outline/80 bg-white">
-          <Image
-            src="/images/tournaments/12/participants.jpg"
-            alt="Participants of the 12th Cambrian Pickleball Tournament gathered on court at Ace Pickleball Club."
-            width={1600}
-            height={900}
-            sizes="100vw"
-            className="block aspect-[4/3] w-full object-cover sm:aspect-auto"
-          />
-        </div>
-      </section>
     </div>
   );
 }
