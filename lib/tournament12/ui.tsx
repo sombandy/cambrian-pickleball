@@ -585,7 +585,7 @@ export function Games({
     const matchTeam = team === "all" || g.a === team || g.b === team;
     const matchState = resultsOnly ? !!s.results[g.id] : !s.results[g.id];
     const text =
-      `${g.id} ${g.number} team ${g.a} team ${g.b} ${identity(g.a).name} ${identity(g.b).name} ${identity(g.a).abbreviation} ${identity(g.b).abbreviation} ${g.pair.map((p) => playerName(s, g.a, p, g.phase) + " " + playerName(s, g.b, p, g.phase)).join(" ")}`.toLowerCase();
+      `${g.id} ${g.number} team ${g.a} team ${g.b} ${identity(g.a).name} ${identity(g.b).name} ${identity(g.a).abbreviation} ${identity(g.b).abbreviation} ${g.pair.map((p) => playerName(s, g.a, p, g.phase, g.number) + " " + playerName(s, g.b, p, g.phase, g.number)).join(" ")}`.toLowerCase();
     return (
       matchTeam && matchState && (!query || text.includes(query.toLowerCase()))
     );
@@ -755,7 +755,13 @@ function GameRow({
 }) {
   const r = s.results[g.id];
   const lead = g.lead
-    ? playerFirstName(s, g.lead[0] as Team, Number(g.lead.slice(1)))
+    ? playerFirstName(
+        s,
+        g.lead[0] as Team,
+        Number(g.lead.slice(1)),
+        g.phase,
+        g.number,
+      )
     : "";
   return (
     <article className={`game-row ${open ? "expanded" : ""}`}>
@@ -778,7 +784,7 @@ function GameRow({
                 </strong>
                 <span>
                   {g.pair
-                    .map((p) => playerFirstName(s, t, p, g.phase))
+                    .map((p) => playerFirstName(s, t, p, g.phase, g.number))
                     .join(" + ")}
                 </span>
               </div>

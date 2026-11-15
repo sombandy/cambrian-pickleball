@@ -44,9 +44,9 @@ export function workbookSheets(s: Tournament, updated: string): ExportSheet[] {
         g.phase,
         g.series,
         g.a,
-        g.pair.map((p) => playerName(s, g.a, p, g.phase)).join(" + "),
+        g.pair.map((p) => playerName(s, g.a, p, g.phase, g.number)).join(" + "),
         g.b,
-        g.pair.map((p) => playerName(s, g.b, p, g.phase)).join(" + "),
+        g.pair.map((p) => playerName(s, g.b, p, g.phase, g.number)).join(" + "),
         r?.a ?? "",
         r?.b ?? "",
         {

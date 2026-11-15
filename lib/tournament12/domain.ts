@@ -36,6 +36,15 @@ export interface TieResult extends Result {
   winner: Team;
   positions: number[];
 }
+// A replacement who took over a registered player's position partway through the
+// league. `from` is the first league game the replacement played; they keep the
+// position for every later league game and for the playoffs.
+export interface Substitution {
+  team: Team;
+  position: number;
+  name: string;
+  from: string;
+}
 export interface Tournament {
   version: 1;
   stage: Stage;
@@ -47,6 +56,7 @@ export interface Tournament {
   results: Record<string, Result>;
   tiebreaks: Record<string, TieResult>;
   history: { at: string; editor: string; note: string }[];
+  substitutions?: Substitution[];
 }
 // IDs remain L1..L60 in persisted state; number maps directly to published L01..L60.
 export const LEAGUE: Game[] = LEAGUE_FIXTURES.map((g) => ({
@@ -102,15 +112,27 @@ export function fillOfficialLeagueNames(s: Tournament): Tournament {
   }
   return next;
 }
+// Who actually played: pass the league game number so a mid-league substitution
+// applies only from the replacement's first game. Without a game number the league
+// name is the registered player; playoff names always include substitutions.
 export function playerName(
   s: Tournament,
   team: Team,
   slot: number,
   phase: Phase = "league",
+  leagueGame?: number,
 ) {
   const originalPosition =
     phase === "league" ? slot : s.lineups[phase][team][slot - 1];
+  const substitute = s.substitutions?.find(
+    (x) =>
+      x.team === team &&
+      x.position === originalPosition &&
+      (phase !== "league" ||
+        (leagueGame !== undefined && leagueGame >= Number(x.from.slice(1)))),
+  );
   return (
+    substitute?.name ||
     s.players[team][originalPosition - 1] ||
     officialPlayers[team][originalPosition - 1] ||
     `${team}${originalPosition}`
@@ -122,7 +144,8 @@ export const playerFirstName = (
   team: Team,
   slot: number,
   phase: Phase = "league",
-) => firstName(playerName(s, team, slot, phase));
+  leagueGame?: number,
+) => firstName(playerName(s, team, slot, phase, leagueGame));
 export function gamesFor(s: Tournament, phase: Phase): Game[] {
   if (phase === "league") return LEAGUE;
   const pairs =
@@ -458,9 +481,9 @@ export function resultsCsv(s: Tournament) {
         g.id,
         g.phase,
         g.a,
-        g.pair.map((p) => playerName(s, g.a, p, g.phase)).join(" + "),
+        g.pair.map((p) => playerName(s, g.a, p, g.phase, g.number)).join(" + "),
         g.b,
-        g.pair.map((p) => playerName(s, g.b, p, g.phase)).join(" + "),
+        g.pair.map((p) => playerName(s, g.b, p, g.phase, g.number)).join(" + "),
         r?.a ?? "",
         r?.b ?? "",
         r?.editor ?? "",
