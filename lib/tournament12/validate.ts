@@ -105,6 +105,25 @@ export function isTournament(v: unknown): v is Tournament {
     )
   )
     return false;
+  if (
+    v.substitutions !== undefined &&
+    !(
+      Array.isArray(v.substitutions) &&
+      v.substitutions.every(
+        (x) =>
+          object(x) &&
+          team(x.team) &&
+          Number.isInteger(x.position) &&
+          (x.position as number) >= 1 &&
+          (x.position as number) <= 5 &&
+          text(x.name) &&
+          !!x.name.trim() &&
+          typeof x.from === "string" &&
+          /^L([1-9]|[1-5][0-9]|60)$/.test(x.from),
+      )
+    )
+  )
+    return false;
   return (
     Array.isArray(v.history) &&
     v.history.length <= 200 &&
