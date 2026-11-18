@@ -12,17 +12,17 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
-  ClipboardList,
   ClipboardCheck,
+  ClipboardList,
   ExternalLink,
   Flag,
   Info,
   ListOrdered,
-  LogIn,
   RefreshCw,
   Search,
   ShieldCheck,
   Trophy,
+  Users,
   WifiOff,
 } from "lucide-react";
 import {
@@ -51,14 +51,81 @@ import {
 import type { TournamentStore } from "./store";
 import { teamDisplay } from "./team-directory";
 
-type Tab = "games" | "results" | "standings" | "playoffs" | "backup";
+type Tab = "results" | "players" | "standings" | "playoffs" | "backup";
 const stageName = (stage: string) =>
   stage === "league"
     ? "League round"
     : stage.startsWith("semis")
       ? "Semifinals"
       : "Final & third place";
+// The tab, search, filters and sort live in the URL so a view can be shared as a link.
+// Standings is the default tab, so it has no parameter.
+const TAB_PARAM: Partial<Record<Tab, string>> = {
+  players: "players",
+  results: "results",
+  backup: "export",
+};
+const urlParam = (name: string) =>
+  typeof window === "undefined"
+    ? ""
+    : (new URLSearchParams(window.location.search).get(name) ?? "");
+function tabFromUrl(): Tab {
+  const value = urlParam("tab");
+  const match = (Object.keys(TAB_PARAM) as Tab[]).find(
+    (t) => TAB_PARAM[t] === value,
+  );
+  return match ?? "standings";
+}
+// Empty values drop the parameter; anything not named (e.g. practice) is kept.
+function setUrlParams(updates: Record<string, string>) {
+  const url = new URL(window.location.href);
+  for (const [name, value] of Object.entries(updates))
+    if (value) url.searchParams.set(name, value);
+    else url.searchParams.delete(name);
+  window.history.replaceState(null, "", url);
+}
 const signed = (n: number) => (n > 0 ? `+${n}` : String(n));
+interface PlayerRecord {
+  name: string;
+  team: Team;
+  wins: number;
+  losses: number;
+  pd: number;
+}
+// Each player's record over the saved games given. A substitute and the player
+// they replaced are separate people, each credited with the games they played.
+function playerRecords(
+  s: Tournament,
+  games: Game[],
+  include: (name: string) => boolean = () => true,
+): PlayerRecord[] {
+  const records = new Map<string, PlayerRecord>();
+  for (const g of games) {
+    const r = s.results[g.id];
+    if (!r) continue;
+    for (const [team, diff] of [
+      [g.a, r.a - r.b],
+      [g.b, r.b - r.a],
+    ] as const)
+      for (const slot of g.pair) {
+        const name = playerName(s, team, slot, g.phase, g.number);
+        if (!include(name)) continue;
+        const key = `${team}:${name}`;
+        const row = records.get(key) ?? {
+          name,
+          team,
+          wins: 0,
+          losses: 0,
+          pd: 0,
+        };
+        if (diff > 0) row.wins++;
+        else if (diff < 0) row.losses++;
+        row.pd += diff;
+        records.set(key, row);
+      }
+  }
+  return [...records.values()];
+}
 function localGet(key: string) {
   try {
     return localStorage.getItem(key) || "";
@@ -132,7 +199,6 @@ export function Desk({
   draftScope = "live",
   practiceTools,
   signedInName,
-  viewerHint,
 }: {
   store: TournamentStore;
   editor: boolean;
@@ -142,12 +208,12 @@ export function Desk({
   practiceTools?: ReactNode;
   // Name on the signed-in account; when set, the scorer is not asked to type one.
   signedInName?: string;
-  // Shown to viewers who cannot edit, e.g. how scorers sign in.
-  viewerHint?: ReactNode;
 }) {
   const view = useSyncExternalStore(store.subscribe, store.getSnapshot);
   const s = view.snapshot.payload;
-  const [tab, setTab] = useState<Tab>("games");
+  const [tab, setTab] = useState<Tab>(tabFromUrl);
+  // Set when a name is clicked in Player stats: Results opens searched for them.
+  const [playerQuery, setPlayerQuery] = useState(() => urlParam("q"));
   const [typedName, setTypedName] = useState(() =>
     localGet(`cpl12:${draftScope}:editor-name`),
   );
@@ -206,13 +272,17 @@ export function Desk({
     const id = setTimeout(() => setNotice(""), 7000);
     return () => clearTimeout(id);
   }, [notice]);
-  const [lastStage, setLastStage] = useState(s.stage);
-  if (lastStage !== s.stage) {
-    setLastStage(s.stage);
-    if (s.stage.endsWith("setup")) setTab("playoffs");
-  }
-  function navigateTab(next: Tab) {
+  function navigateTab(next: Tab, player = "") {
     setTab(next);
+    setPlayerQuery(player);
+    setUrlParams({
+      tab: TAB_PARAM[next] ?? "",
+      q: player,
+      team: "",
+      round: "",
+      sort: "",
+      order: "",
+    });
     setActionError("");
     document.getElementById("main")?.scrollIntoView({ block: "start" });
   }
@@ -235,10 +305,9 @@ export function Desk({
     }
   }
   const nav = [
-    { id: "games", label: "Games", icon: ClipboardList },
-    { id: "results", label: "Results", icon: ClipboardCheck },
     { id: "standings", label: "Standings", icon: ListOrdered },
-    { id: "playoffs", label: "Playoffs", icon: Trophy },
+    { id: "players", label: "Players", icon: Users },
+    { id: "results", label: "Results", icon: ClipboardCheck },
     { id: "backup", label: "Export", icon: ArrowDownToLine },
   ] as const;
   return (
@@ -307,8 +376,8 @@ export function Desk({
             <div>
               <p className="eyebrow">{stageName(s.stage)}</p>
               <h1>
-                {tab === "games"
-                  ? "Games"
+                {tab === "players"
+                  ? "Player stats"
                   : tab === "results"
                     ? "Results"
                     : tab === "standings"
@@ -336,38 +405,25 @@ export function Desk({
               }}
             />
           </div>
-          {editor && (
+          {editor && !signedInName && (
             <div className="editor-strip">
               <ShieldCheck size={18} />
               <strong>Editor mode</strong>
-              {signedInName ? (
-                <span>Signed in as {signedInName}</span>
-              ) : (
-                <label>
-                  <span>Your name</span>
-                  <input
-                    aria-label="Your name"
-                    value={typedName}
-                    maxLength={80}
-                    onChange={(e) => {
-                      setTypedName(e.target.value);
-                      localSet(
-                        `cpl12:${draftScope}:editor-name`,
-                        e.target.value,
-                      );
-                    }}
-                    placeholder="Enter your name"
-                    autoComplete="given-name"
-                  />
-                </label>
-              )}
+              <label>
+                <span>Your name</span>
+                <input
+                  aria-label="Your name"
+                  value={typedName}
+                  maxLength={80}
+                  onChange={(e) => {
+                    setTypedName(e.target.value);
+                    localSet(`cpl12:${draftScope}:editor-name`, e.target.value);
+                  }}
+                  placeholder="Enter your name"
+                  autoComplete="given-name"
+                />
+              </label>
             </div>
-          )}
-          {!editor && viewerHint && (
-            <p className="editor-strip viewer-hint">
-              <LogIn size={18} />
-              <span>{viewerHint}</span>
-            </p>
           )}
           {(view.error || actionError || !online) && (
             <div className="notice error" role="alert">
@@ -400,36 +456,11 @@ export function Desk({
             </div>
           ) : (
             <>
-              {tab === "games" && (
-                <>
-                  {s.stage.endsWith("setup") && (
-                    <div className="notice">
-                      <Info size={20} />
-                      <div>
-                        <p>
-                          Player lineups must be published before this round’s
-                          scores can be entered.
-                        </p>
-                        <button
-                          className="text-button"
-                          onClick={() => navigateTab("playoffs")}
-                        >
-                          Review playoff lineups
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  <Games
-                    key={activePhase}
-                    state={s}
-                    phase={activePhase}
-                    editor={editor}
-                    ready={ready}
-                    saving={view.saving}
-                    save={save}
-                    draftScope={draftScope}
-                  />
-                </>
+              {tab === "players" && (
+                <PlayerStats
+                  state={s}
+                  showGames={(name) => navigateTab("results", name)}
+                />
               )}
               {tab === "standings" && <Standings state={s} />}
               {tab === "results" && (
@@ -438,6 +469,7 @@ export function Desk({
                   state={s}
                   phase={activePhase}
                   resultsOnly
+                  initialQuery={playerQuery}
                   editor={editor}
                   ready={ready}
                   saving={view.saving}
@@ -560,6 +592,7 @@ export function Games({
   save,
   draftScope,
   resultsOnly = false,
+  initialQuery = "",
 }: {
   state: Tournament;
   phase: Phase;
@@ -569,14 +602,27 @@ export function Games({
   save: (a: Action) => Promise<boolean>;
   draftScope: string;
   resultsOnly?: boolean;
+  initialQuery?: string;
 }) {
-  const [team, setTeam] = useState("all");
-  const [query, setQuery] = useState("");
+  const [team, setTeam] = useState(() => {
+    const value = resultsOnly ? urlParam("team").toUpperCase() : "";
+    return (TEAMS as readonly string[]).includes(value) ? value : "all";
+  });
+  const [query, setQuery] = useState(initialQuery);
   const [limit, setLimit] = useState(20);
   const [open, setOpen] = useState<string | null>(null);
-  const [selectedPhase, setSelectedPhase] = useState<Phase | "all">(
-    resultsOnly ? "all" : phase,
-  );
+  const [selectedPhase, setSelectedPhase] = useState<Phase | "all">(() => {
+    if (!resultsOnly) return phase;
+    const value = urlParam("round");
+    return (value === "semis" && s.seeds.length > 0) ||
+      (value === "finals" && s.finalists.final.length > 0) ||
+      value === "league"
+      ? value
+      : "all";
+  });
+  const share = (updates: Record<string, string>) => {
+    if (resultsOnly) setUrlParams(updates);
+  };
   const games =
     selectedPhase === "all"
       ? [...LEAGUE, ...gamesFor(s, "semis"), ...gamesFor(s, "finals")]
@@ -594,6 +640,16 @@ export function Games({
     filtered.sort((a, b) =>
       s.results[b.id].at.localeCompare(s.results[a.id].at),
     );
+  // Searching Results by a player's name: total up that player's record across the
+  // games shown. Skipped when the search is too broad to mean one person.
+  const needle = query.trim().toLowerCase();
+  const matched =
+    resultsOnly && needle
+      ? playerRecords(s, filtered, (name) =>
+          name.toLowerCase().includes(needle),
+        )
+      : [];
+  const statRows = matched.length <= 3 ? matched : [];
   return (
     <>
       <div className="section-intro">
@@ -615,6 +671,7 @@ export function Games({
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
+              share({ q: e.target.value.trim() });
               setLimit(20);
             }}
           />
@@ -625,6 +682,7 @@ export function Games({
             value={team}
             onChange={(e) => {
               setTeam(e.target.value);
+              share({ team: e.target.value === "all" ? "" : e.target.value });
               setLimit(20);
             }}
           >
@@ -644,6 +702,7 @@ export function Games({
             value={selectedPhase}
             onChange={(e) => {
               setSelectedPhase(e.target.value as Phase | "all");
+              share({ round: e.target.value === "all" ? "" : e.target.value });
               setLimit(20);
               setOpen(null);
             }}
@@ -657,6 +716,32 @@ export function Games({
           </select>
         </label>
       )}
+      {statRows.map((p) => (
+        <div
+          className="player-stats"
+          key={`${p.team}:${p.name}`}
+          aria-label={`${p.name} overall record`}
+        >
+          <div className="player-stats-name">
+            <strong>{p.name}</strong>
+            <span>{identity(p.team).name}</span>
+          </div>
+          <dl>
+            <div>
+              <dt>Wins</dt>
+              <dd>{p.wins}</dd>
+            </div>
+            <div>
+              <dt>Losses</dt>
+              <dd>{p.losses}</dd>
+            </div>
+            <div>
+              <dt>PD</dt>
+              <dd>{signed(p.pd)}</dd>
+            </div>
+          </dl>
+        </div>
+      ))}
       <div className="list-heading">
         <span>
           {filtered.length}{" "}
@@ -950,6 +1035,131 @@ function ScoreForm({
     </form>
   );
 }
+type PlayerSort = "wins" | "losses" | "pd";
+function PlayerStats({
+  state: s,
+  showGames,
+}: {
+  state: Tournament;
+  showGames: (name: string) => void;
+}) {
+  const [sort, setSort] = useState<{ key: PlayerSort; desc: boolean }>(() => {
+    const key = urlParam("sort");
+    return {
+      key: key === "losses" || key === "pd" ? key : "wins",
+      desc: urlParam("order") !== "asc",
+    };
+  });
+  const rows = playerRecords(s, [
+    ...LEAGUE,
+    ...gamesFor(s, "semis"),
+    ...gamesFor(s, "finals"),
+  ]).sort((a, b) => {
+    const primary = (a[sort.key] - b[sort.key]) * (sort.desc ? -1 : 1);
+    return (
+      primary ||
+      b.wins - a.wins ||
+      b.pd - a.pd ||
+      a.losses - b.losses ||
+      a.name.localeCompare(b.name)
+    );
+  });
+  const columns: { key: PlayerSort; label: string; title: string }[] = [
+    { key: "wins", label: "W", title: "Wins" },
+    { key: "losses", label: "L", title: "Losses" },
+    { key: "pd", label: "PD", title: "Point differential" },
+  ];
+  return (
+    <>
+      <div className="section-intro">
+        <h2>Player stats</h2>
+        <p>
+          Every player’s record across all saved games, playoffs included. Tap
+          W, L or PD to sort, or a name to see that player’s games.
+        </p>
+      </div>
+      {rows.length ? (
+        <div className="standings-wrap">
+          <table className="players-table">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Player</th>
+                {columns.map((c) => {
+                  const active = sort.key === c.key;
+                  return (
+                    <th
+                      key={c.key}
+                      scope="col"
+                      aria-sort={
+                        active
+                          ? sort.desc
+                            ? "descending"
+                            : "ascending"
+                          : undefined
+                      }
+                    >
+                      <button
+                        type="button"
+                        className={active ? "active" : ""}
+                        title={`Sort by ${c.title.toLowerCase()}`}
+                        onClick={() => {
+                          const desc = active ? !sort.desc : true;
+                          setSort({ key: c.key, desc });
+                          setUrlParams({
+                            sort: c.key === "wins" ? "" : c.key,
+                            order: desc ? "" : "asc",
+                          });
+                        }}
+                      >
+                        <abbr title={c.title}>{c.label}</abbr>
+                        <span aria-hidden="true">
+                          {active ? (sort.desc ? "▼" : "▲") : "↕"}
+                        </span>
+                      </button>
+                    </th>
+                  );
+                })}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((p, i) => (
+                <tr key={`${p.team}:${p.name}`}>
+                  <td className="rank">{i + 1}</td>
+                  <th scope="row">
+                    <div className="player-cell">
+                      {teamBadge(p.team)}
+                      <span>
+                        <button
+                          type="button"
+                          className="player-link"
+                          title={`See ${p.name}’s games`}
+                          onClick={() => showGames(p.name)}
+                        >
+                          {p.name}
+                        </button>
+                        <small>{identity(p.team).name}</small>
+                      </span>
+                    </div>
+                  </th>
+                  <td>{p.wins}</td>
+                  <td>{p.losses}</td>
+                  <td>{signed(p.pd)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="empty-state">
+          <Check size={27} />
+          <h3>No results yet.</h3>
+          <p>Player records appear once scores are saved.</p>
+        </div>
+      )}
+    </>
+  );
+}
 function Standings({ state: s }: { state: Tournament }) {
   const rows = standings(s);
   const played = LEAGUE.filter((g) => s.results[g.id]).length;
@@ -1206,9 +1416,9 @@ function Playoffs({
           {!setup && (
             <button
               className="button secondary wide"
-              onClick={() => setTab("games")}
+              onClick={() => setTab("results")}
             >
-              Go to game scores <ChevronRight size={17} />
+              View results <ChevronRight size={17} />
             </button>
           )}
           {s.stage === "semis" &&

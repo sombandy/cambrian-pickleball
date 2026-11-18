@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { Desk } from "./ui";
 import { TournamentStore, practiceBackend } from "./store";
@@ -85,10 +84,8 @@ function Live({
   authControl,
   editor = false,
   signedInName,
-  viewerHint,
 }: {
   authControl?: React.ReactNode;
-  viewerHint?: React.ReactNode;
   editor?: boolean;
   signedInName?: string;
 }) {
@@ -103,7 +100,6 @@ function Live({
       editor={editor}
       auth={authControl}
       signedInName={signedInName}
-      viewerHint={viewerHint}
       draftScope="railway:12"
     />
   );
@@ -143,18 +139,6 @@ function AuthenticatedLive() {
     <Live
       editor={!!isSignedIn && editor}
       signedInName={isSignedIn ? signedInName : undefined}
-      viewerHint={
-        isLoaded &&
-        !isSignedIn && (
-          <>
-            Organizers and team captains:{" "}
-            <Link href="/sign-in?redirect_url=%2Ftournament%2F12%2Fscores">
-              sign in
-            </Link>{" "}
-            with your Gmail account to enter scores.
-          </>
-        )
-      }
     />
   );
 }
